@@ -40,9 +40,9 @@ push() {
   aws s3 sync ./dist s3://gaborschulz.com/downloads/pytodoist
 }
 
-load_env && \
-cleanup && \
-run_test && \
+#load_env && \
+#cleanup && \
+#run_test && \
 bump_version $1 && \
 push
 
