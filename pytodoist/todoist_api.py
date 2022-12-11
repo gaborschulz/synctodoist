@@ -160,11 +160,11 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
 if __name__ == '__main__':
     import os
 
-    apikey: str = os.environ.get('TODOIST_API')  # type: ignore
-    todoist = TodoistAPI(api_key=apikey)
-    projects = todoist.sync()
-    project_ = todoist.get_project_by_pattern('Private')
-    project_ = todoist.get_project(project_id='2198523714')
-    # added_task = todoist.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
-    completed_task = todoist.complete_task(task_id=6428239110)
-    print(completed_task)
+    apikey_: str = os.environ.get('TODOIST_API')  # type: ignore
+    todoist_ = TodoistAPI(api_key=apikey_)
+    projects_ = todoist_.sync()
+    project_ = todoist_.get_project_by_pattern('Private')
+    project_ = todoist_.get_project(project_id='2198523714')
+    # added_task = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
+    completed_task_ = todoist_.complete_task(task_id=6428239110)
+    print(completed_task_)
