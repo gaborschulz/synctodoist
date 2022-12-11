@@ -26,7 +26,7 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         self._sync_token: str = '*'
-        self.projects = []
+        self.projects: list = []
 
     def sync(self) -> Any:
         """Synchronize with Todoist API
