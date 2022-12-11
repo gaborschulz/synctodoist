@@ -1,0 +1,86 @@
+[tool.poetry]
+name = "pytodoist"
+version = "0.1.0"
+description = "A Python client for the Todoist Sync v9 API"
+license = "MIT"
+authors = ["Gabor Schulz <gabor@gaborschulz.com>"]
+readme = "README.md"
+homepage = ""
+repository = "https://github.com/gaborschulz/pytodoist"
+documentation = ""
+keywords = []
+classifiers = [  
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11"
+]  # https://pypi.org/classifiers/
+packages = [{include = "pytodoist"}]
+
+[tool.poetry.scripts]
+
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+pytest-cov = "^4.0.0"
+coverage = "^6.5.0"
+pylint = "^2.15.6"
+mypy = "^0.991"
+pytest-pylint = "^0.19.0"
+pytest-mypy = "^0.10.1"
+mkdocs-material = "^8.5.10"
+
+
+[tool.isort]
+profile = "black"
+
+
+[tool.bandit]
+exclude_dirs = ["data", "docs", "tests", "migrations"]
+
+[tool.pytest.ini_options]
+python_files = "tests.py test_*.py"
+addopts = "--pylint --mypy"
+
+[tool.coverage.run]
+omit = [
+    "tests/*"
+]
+
+[tool.mypy]
+exclude = [
+    'data',
+    'docs',
+    'migrations',
+    'tests',
+]
+ignore_missing_imports = "True"
+warn_return_any = true
+warn_no_return = true
+
+
+[tool.pylint.'MASTER']
+ignore = "data,docs,migrations,tests"
+
+[tool.pylint.'MESSAGES CONTROL']
+max-line-length = 160
+extension-pkg-whitelist = "pydantic"
+disable = """
+    missing-module-docstring,
+    duplicate-code,
+    too-many-ancestors
+"""
