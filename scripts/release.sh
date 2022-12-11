@@ -17,7 +17,8 @@ run_test() {
 }
 
 cleanup() {
-  find . -type d -name "@eaDir" -print0 | xargs -0 rm -rf
+  find . -type d -name "@eaDir" -print0 | xargs -0 rm -rf && \
+  rm -rf dist/*
 }
 
 bump_version() {
@@ -40,9 +41,9 @@ push() {
   aws s3 sync ./dist s3://gaborschulz.com/downloads/pytodoist
 }
 
-#load_env && \
-#cleanup && \
-#run_test && \
+load_env && \
+cleanup && \
+run_test && \
 bump_version $1 && \
 push
 
