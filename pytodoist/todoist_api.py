@@ -1,5 +1,6 @@
 import inspect
 import json
+import re
 import uuid
 from typing import Any
 
@@ -11,7 +12,7 @@ APIS = {
     'get_task': 'items/get',
     'get_stats': 'completed/get_stats',
     'get_project': 'projects/get',
-    'add_task': 'sync',
+    '_command': 'sync',
 }
 
 
@@ -25,6 +26,7 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         self._sync_token: str = '*'
+        self.projects = []
 
     def sync(self) -> Any:
         """Synchronize with Todoist API
@@ -35,6 +37,7 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         method_name = inspect.stack()[0][3]
         data = {'resource_types': ['projects']}
         result = self._post(data, method_name)
+        self.projects = result['projects']
         return result
 
     def get_task(self, task_id: int | str) -> Any:
@@ -71,6 +74,22 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         result = self._post(data, method_name)
         return result
 
+    def get_project_by_pattern(self, pattern: str) -> Any:
+        """Get a project if its name matches a regex pattern
+
+        Args:
+            pattern: the regex pattern against which the project's name is matched
+
+        Returns:
+            A dict containing the project details
+        """
+        compiled_pattern = re.compile(pattern=pattern)
+        for project in self.projects:
+            if compiled_pattern.findall(project['name']):
+                return project
+
+        return None
+
     def get_stats(self) -> dict:
         """Get Todoist usage statistics
 
@@ -90,13 +109,29 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         Args:
             **kwargs: properties of the task to be added
         """
+        return self._command(data=kwargs, command_type='item_add')
+
+    def complete_task(self, task_id: int | str) -> Any:
+        """Complete a task
+
+        Args:
+            task_id: the id of the task to complete
+
+        Returns:
+            A dict with the result of the task completion command
+        """
+        if isinstance(task_id, str):
+            task_id = int(task_id)
+        return self._command(data={'id': task_id}, command_type='item_complete')
+
+    def _command(self, data: Any, command_type: str) -> Any:
         method_name = inspect.stack()[0][3]
         data = {'commands': [
             {
-                "type": "item_add",
+                "type": command_type,
                 "temp_id": str(uuid.uuid4()),
                 "uuid": str(uuid.uuid4()),
-                "args": kwargs
+                "args": data
             }
         ]}
         result = self._post(data, method_name)
@@ -128,6 +163,8 @@ if __name__ == '__main__':
     apikey: str = os.environ.get('TODOIST_API')  # type: ignore
     todoist = TodoistAPI(api_key=apikey)
     projects = todoist.sync()
-    project = todoist.get_project(project_id='2198523714')
+    project_ = todoist.get_project_by_pattern('Private')
+    project_ = todoist.get_project(project_id='2198523714')
     # added_task = todoist.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
-    print(project)
+    completed_task = todoist.complete_task(task_id=6428239110)
+    print(completed_task)
