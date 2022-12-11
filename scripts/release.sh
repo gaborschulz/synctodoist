@@ -35,7 +35,9 @@ bump_version() {
 }
 
 push() {
-  git push origin v$(poetry version --short)
+  git push origin v$(poetry version --short) && \
+  poetry build && \
+  aws s3 sync ./dist s3://gaborschulz.com/downloads/pytodoist
 }
 
 load_env && \
