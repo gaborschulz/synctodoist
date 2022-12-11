@@ -27,6 +27,7 @@ packages = [{include = "pytodoist"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
+httpx = "^0.23.1"
 
 
 [build-system]
