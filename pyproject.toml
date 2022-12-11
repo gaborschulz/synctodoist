@@ -9,7 +9,7 @@ homepage = ""
 repository = "https://github.com/gaborschulz/pytodoist"
 documentation = ""
 keywords = []
-classifiers = [  
+classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
@@ -20,7 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11"
 ]  # https://pypi.org/classifiers/
-packages = [{include = "pytodoist"}]
+packages = [{ include = "pytodoist" }]
 
 [tool.poetry.scripts]
 
