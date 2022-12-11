@@ -8,7 +8,8 @@ BASE_URL = 'https://api.todoist.com/sync/v9'
 APIS = {
     'sync': 'sync',
     'get_task': 'items/get',
-    'get_stats': 'completed/get_stats'
+    'get_stats': 'completed/get_stats',
+    'get_project': 'projects/get'
 }
 
 
@@ -24,21 +25,56 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         self._sync_token: str = '*'
 
     def sync(self) -> Any:
-        """Synchronize with Todoist API"""
+        """Synchronize with Todoist API
+
+        Returns:
+            A dict with all projects
+        """
         method_name = inspect.stack()[0][3]
         data = {'resource_types': ['projects']}
         result = self._post(data, method_name)
         return result
 
-    def get_task(self, task_id: int) -> Any:
-        """Get task from Todoist API by id"""
+    def get_task(self, task_id: int | str) -> Any:
+        """Get task by id
+
+        Args:
+            task_id: the id of the task
+
+        Returns:
+            A dict with all task details
+        """
         method_name = inspect.stack()[0][3]
+        if isinstance(task_id, str):
+            task_id = int(task_id)
+
         data = {'item_id': task_id}
         result = self._post(data, method_name)
         return result
 
+    def get_project(self, project_id: int | str) -> Any:
+        """Get project by name
+
+        Args:
+            project_id: the id of the project
+
+        Returns:
+            A dict with all project details
+        """
+        method_name = inspect.stack()[0][3]
+        if isinstance(project_id, str):
+            project_id = int(project_id)
+
+        data = {'project_id': project_id, 'all_data': False}
+        result = self._post(data, method_name)
+        return result
+
     def get_stats(self) -> dict:
-        """Get Todoist usage statistics"""
+        """Get Todoist usage statistics
+
+        Returns:
+            A dict with all user stats
+        """
         method_name = inspect.stack()[0][3]
         url = f'{BASE_URL}/{APIS[method_name]}'
         with httpx.Client(headers=self.headers) as client:
@@ -71,6 +107,6 @@ if __name__ == '__main__':
 
     apikey: str = os.environ.get('TODOIST_API')  # type: ignore
     todoist = TodoistAPI(api_key=apikey)
-    # projects = todoist.sync()
-    task = todoist.get_task(task_id=2865433246)
-    print(task)
+    projects = todoist.sync()
+    project = todoist.get_project(project_id='2198523714')
+    print(project)
