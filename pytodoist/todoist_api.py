@@ -1,5 +1,6 @@
 import inspect
 import json
+import uuid
 from typing import Any
 
 import httpx
@@ -9,7 +10,8 @@ APIS = {
     'sync': 'sync',
     'get_task': 'items/get',
     'get_stats': 'completed/get_stats',
-    'get_project': 'projects/get'
+    'get_project': 'projects/get',
+    'add_task': 'sync',
 }
 
 
@@ -82,6 +84,24 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
             response.raise_for_status()
             return response.json()  # type: ignore
 
+    def add_task(self, **kwargs) -> Any:
+        """Add new task to todoist
+
+        Args:
+            **kwargs: properties of the task to be added
+        """
+        method_name = inspect.stack()[0][3]
+        data = {'commands': [
+            {
+                "type": "item_add",
+                "temp_id": str(uuid.uuid4()),
+                "uuid": str(uuid.uuid4()),
+                "args": kwargs
+            }
+        ]}
+        result = self._post(data, method_name)
+        return result
+
     def _build_request_data(self, data: Any) -> dict:
         result = {
             'sync_token': self._sync_token,
@@ -109,4 +129,5 @@ if __name__ == '__main__':
     todoist = TodoistAPI(api_key=apikey)
     projects = todoist.sync()
     project = todoist.get_project(project_id='2198523714')
+    # added_task = todoist.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
     print(project)
