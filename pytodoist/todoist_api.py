@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 
-from pytodoist.models import Task
+from pytodoist.models import Task, Project, Due, Command
 
 BASE_URL = 'https://api.todoist.com/sync/v9'
 APIS = {
@@ -29,7 +29,8 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         }
         self._sync_token: str = '*'
         self.projects: list = []
-        self._commands: dict[str, dict] = {}
+        self._commands: dict[str, Command] = {}
+        self._temp_tasks: dict[str, Task] = {}
 
     def sync(self) -> Any:
         """Synchronize with Todoist API
@@ -40,7 +41,7 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         method_name = inspect.stack()[0][3]
         data = {'resource_types': ['projects']}
         result = self._post(data, method_name)
-        self.projects = result['projects']
+        self.projects = [Project(**x) for x in result['projects']]
         return result
 
     def get_task(self, task_id: int | str) -> Any:
@@ -76,7 +77,8 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
 
         data = {'project_id': project_id, 'all_data': False}
         result = self._post(data, method_name)
-        return result
+        project = Project(**result['project'])
+        return project
 
     def get_project_by_pattern(self, pattern: str) -> Any:
         """Get a project if its name matches a regex pattern
@@ -89,7 +91,7 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         """
         compiled_pattern = re.compile(pattern=pattern)
         for project in self.projects:
-            if compiled_pattern.findall(project['name']):
+            if compiled_pattern.findall(project.name):
                 return project
 
         return None
@@ -107,13 +109,14 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
             response.raise_for_status()
             return response.json()  # type: ignore
 
-    def add_task(self, **kwargs) -> Any:
+    def add_task(self, task: Task) -> Any:
         """Add new task to todoist
 
         Args:
             **kwargs: properties of the task to be added
         """
-        return self._command(data=kwargs, command_type='item_add')
+        self._temp_tasks[task.temp_id] = task
+        return self._command(data=task.dict(exclude_none=True), command_type='item_add')
 
     def close_task(self, task_id: int | str) -> Any:
         """Complete a task
@@ -129,21 +132,26 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         return self._command(data={'id': task_id}, command_type='item_complete')
 
     def _command(self, data: Any, command_type: str) -> Any:
-        command_uuid = str(uuid.uuid4())
-        temp_id = str(uuid.uuid4())
-        data = {
-            "type": command_type,
-            "temp_id": temp_id,
-            "uuid": command_uuid,
-            "args": data
-        }
-        self._commands[command_uuid] = data
+        temp_id = data.pop('temp_id', str(uuid.uuid4()))
+        command = Command(type=command_type, temp_id=temp_id, args=data)
+
+        self._commands[command.uuid] = command
 
     def commit(self) -> Any:
         """Commit open commands to Todoist"""
         method_name = inspect.stack()[0][3]
-        data = {'commands': list(self._commands.values())}
+        data = {'commands': [command.dict(exclude_none=True) for command in self._commands.values()]}
         result = self._post(data, method_name)
+
+        for key, value in result['sync_status'].items():
+            if value == 'ok':
+                self._commands.pop(key)
+
+        for key, value in result['temp_id_mapping'].items():
+            task = self._temp_tasks[key]
+            task.id = value
+            self._temp_tasks.pop(key)
+
         return result
 
     def _build_request_data(self, data: Any) -> dict:
@@ -171,12 +179,14 @@ if __name__ == '__main__':
 
     apikey_: str = os.environ.get('TODOIST_API')  # type: ignore
     todoist_ = TodoistAPI(api_key=apikey_)
-    # projects_ = todoist_.sync()
-    # project_ = todoist_.get_project_by_pattern('Private')
+    projects_ = todoist_.sync()
+    project_ = todoist_.get_project_by_pattern('Private')
     # project_ = todoist_.get_project(project_id='2198523714')
+    task_to_add = Task(content="Buy Milk", project_id="2198523714", due=Due(string="today"))
+    todoist_.add_task(task_to_add)
     # added_task_0 = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
     # added_task_1 = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
     # completed_task_ = todoist_.close_task(task_id=6428239110)
-    # result = todoist_.commit()
-    t = todoist_.get_task(task_id='6429400765')
-    print(t)
+    result_ = todoist_.commit()
+    # t = todoist_.get_task(task_id='6429400765')
+    print(project_)
