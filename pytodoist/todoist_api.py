@@ -115,7 +115,7 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         Args:
             **kwargs: properties of the task to be added
         """
-        self._temp_tasks[task.temp_id] = task
+        self._temp_tasks[task.temp_id] = task  # type: ignore
         return self._command(data=task.dict(exclude_none=True), command_type='item_add')
 
     def close_task(self, task_id: int | str) -> Any:
