@@ -6,13 +6,15 @@ from typing import Any
 
 import httpx
 
+from pytodoist.models import Task
+
 BASE_URL = 'https://api.todoist.com/sync/v9'
 APIS = {
     'sync': 'sync',
     'get_task': 'items/get',
     'get_stats': 'completed/get_stats',
     'get_project': 'projects/get',
-    '_command': 'sync',
+    'commit': 'sync',
 }
 
 
@@ -27,6 +29,7 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         }
         self._sync_token: str = '*'
         self.projects: list = []
+        self._commands: dict[str, dict] = {}
 
     def sync(self) -> Any:
         """Synchronize with Todoist API
@@ -55,7 +58,8 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
 
         data = {'item_id': task_id}
         result = self._post(data, method_name)
-        return result
+        task = Task(**result.get('item'))
+        return task
 
     def get_project(self, project_id: int | str) -> Any:
         """Get project by name
@@ -111,7 +115,7 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         """
         return self._command(data=kwargs, command_type='item_add')
 
-    def complete_task(self, task_id: int | str) -> Any:
+    def close_task(self, task_id: int | str) -> Any:
         """Complete a task
 
         Args:
@@ -125,15 +129,20 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         return self._command(data={'id': task_id}, command_type='item_complete')
 
     def _command(self, data: Any, command_type: str) -> Any:
+        command_uuid = str(uuid.uuid4())
+        temp_id = str(uuid.uuid4())
+        data = {
+            "type": command_type,
+            "temp_id": temp_id,
+            "uuid": command_uuid,
+            "args": data
+        }
+        self._commands[command_uuid] = data
+
+    def commit(self) -> Any:
+        """Commit open commands to Todoist"""
         method_name = inspect.stack()[0][3]
-        data = {'commands': [
-            {
-                "type": command_type,
-                "temp_id": str(uuid.uuid4()),
-                "uuid": str(uuid.uuid4()),
-                "args": data
-            }
-        ]}
+        data = {'commands': list(self._commands.values())}
         result = self._post(data, method_name)
         return result
 
@@ -162,9 +171,12 @@ if __name__ == '__main__':
 
     apikey_: str = os.environ.get('TODOIST_API')  # type: ignore
     todoist_ = TodoistAPI(api_key=apikey_)
-    projects_ = todoist_.sync()
-    project_ = todoist_.get_project_by_pattern('Private')
-    project_ = todoist_.get_project(project_id='2198523714')
-    # added_task = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
-    completed_task_ = todoist_.complete_task(task_id=6428239110)
-    print(completed_task_)
+    # projects_ = todoist_.sync()
+    # project_ = todoist_.get_project_by_pattern('Private')
+    # project_ = todoist_.get_project(project_id='2198523714')
+    # added_task_0 = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
+    # added_task_1 = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
+    # completed_task_ = todoist_.close_task(task_id=6428239110)
+    # result = todoist_.commit()
+    t = todoist_.get_task(task_id='6429400765')
+    print(t)
