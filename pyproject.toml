@@ -45,6 +45,7 @@ mypy = "^0.991"
 pytest-pylint = "^0.19.0"
 pytest-mypy = "^0.10.1"
 mkdocs-material = "^8.5.10"
+python-dotenv = "^0.21.0"
 
 
 [tool.isort]
@@ -57,11 +58,6 @@ exclude_dirs = ["data", "docs", "tests", "migrations"]
 [tool.pytest.ini_options]
 python_files = "tests.py test_*.py"
 addopts = "--pylint --mypy"
-
-[tool.coverage.run]
-omit = [
-    "tests/*"
-]
 
 [tool.mypy]
 exclude = [

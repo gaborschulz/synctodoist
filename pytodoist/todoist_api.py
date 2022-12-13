@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 
+from pytodoist.exceptions import TodoistError
 from pytodoist.models import Task, Project, Due, Command
 
 BASE_URL = 'https://api.todoist.com/sync/v9'
@@ -22,13 +23,14 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
     """Todoist API class for the new Sync v9 API"""
 
     def __init__(self, api_key: str):
-        self.api_key = api_key
-        self.headers = {
-            'Authorization': f'Bearer {self.api_key}',
+        self._api_key = api_key
+        self._headers = {
+            'Authorization': f'Bearer {self._api_key}',
             'Content-Type': 'application/x-www-form-urlencoded'
         }
+        self.synced = False
         self._sync_token: str = '*'
-        self.projects: list = []
+        self.projects: list[Project] = []
         self._commands: dict[str, Command] = {}
         self._temp_tasks: dict[str, Task] = {}
 
@@ -42,16 +44,17 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         data = {'resource_types': ['projects']}
         result = self._post(data, method_name)
         self.projects = [Project(**x) for x in result['projects']]
+        self.synced = True
         return result
 
-    def get_task(self, task_id: int | str) -> Any:
+    def get_task(self, task_id: int | str) -> Task:
         """Get task by id
 
         Args:
             task_id: the id of the task
 
         Returns:
-            A dict with all task details
+            A Task instance with all task details
         """
         method_name = inspect.stack()[0][3]
         if isinstance(task_id, str):
@@ -62,14 +65,14 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         task = Task(**result.get('item'))
         return task
 
-    def get_project(self, project_id: int | str) -> Any:
+    def get_project(self, project_id: int | str) -> Project:
         """Get project by name
 
         Args:
             project_id: the id of the project
 
         Returns:
-            A dict with all project details
+            A Project instance with all project details
         """
         method_name = inspect.stack()[0][3]
         if isinstance(project_id, str):
@@ -80,15 +83,20 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         project = Project(**result['project'])
         return project
 
-    def get_project_by_pattern(self, pattern: str) -> Any:
+    def get_project_by_pattern(self, pattern: str) -> Project | None:
         """Get a project if its name matches a regex pattern
 
         Args:
             pattern: the regex pattern against which the project's name is matched
 
         Returns:
-            A dict containing the project details
+            A Project instance containing the project details
+
+        IMPORTANT: You have to run the .sync() method first for this to work
         """
+        if not self.synced:
+            raise TodoistError('Run .sync() before you try to find a project based on a pattern')
+
         compiled_pattern = re.compile(pattern=pattern)
         for project in self.projects:
             if compiled_pattern.findall(project.name):
@@ -104,7 +112,7 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         """
         method_name = inspect.stack()[0][3]
         url = f'{BASE_URL}/{APIS[method_name]}'
-        with httpx.Client(headers=self.headers) as client:
+        with httpx.Client(headers=self._headers) as client:
             response = client.get(url=url)
             response.raise_for_status()
             return response.json()  # type: ignore
@@ -113,25 +121,35 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         """Add new task to todoist
 
         Args:
-            **kwargs: properties of the task to be added
+            task: a Task instance to add to Todoist
         """
         self._temp_tasks[task.temp_id] = task  # type: ignore
-        return self._command(data=task.dict(exclude_none=True), command_type='item_add')
+        self._command(data=task.dict(exclude_none=True), command_type='item_add')
 
-    def close_task(self, task_id: int | str) -> Any:
+    def close_task(self, task_id: int | str | None = None, task: Task | None = None) -> None:
         """Complete a task
 
         Args:
-            task_id: the id of the task to complete
+            task_id: the id of the task to close
+            task: the Task object to close
 
-        Returns:
-            A dict with the result of the task completion command
+        Either the task_id or the task must be provided. The task object takes priority over the task_id argument
         """
+        if not task_id and not task:
+            raise ValueError('Either task_id or task have to be provided')
+
+        if isinstance(task, Task):
+            if not task.id:
+                task_id = task.temp_id
+            else:
+                task_id = int(task.id)
+
         if isinstance(task_id, str):
             task_id = int(task_id)
-        return self._command(data={'id': task_id}, command_type='item_complete')
 
-    def _command(self, data: Any, command_type: str) -> Any:
+        self._command(data={'id': task_id}, command_type='item_complete')
+
+    def _command(self, data: Any, command_type: str) -> None:
         temp_id = data.pop('temp_id', str(uuid.uuid4()))
         command = Command(type=command_type, temp_id=temp_id, args=data)
 
@@ -165,7 +183,7 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
     def _post(self, data: dict, method_name: str) -> Any:
         url = f'{BASE_URL}/{APIS[method_name]}'
         dataset = self._build_request_data(data=data)
-        response = httpx.post(url=url, data=dataset, headers=self.headers)
+        response = httpx.post(url=url, data=dataset, headers=self._headers)
         response.raise_for_status()
         result = response.json()
 
