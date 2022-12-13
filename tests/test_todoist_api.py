@@ -57,3 +57,8 @@ def test_get_project_by_pattern_synced_notexisting(todoist):
     todoist.sync()
     project = todoist.get_project_by_pattern(pattern='NON_EXISTING_PROJECT')
     assert project is None
+
+
+def test_get_stats(todoist):
+    stats = todoist.get_stats()
+    assert 'karma' in stats
