@@ -44,12 +44,16 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         self._cache_dir = cache_dir if isinstance(cache_dir, Path) else Path(cache_dir)
 
     # PRIVATE METHODS
-    def _remove_deleted(self, cached: Mapping[str, BaseModel], received: list[Any]) -> dict[str, BaseModel]:
+    def _remove_deleted(self, cached: Mapping[str, BaseModel], received: list[Any], full_sync: bool = False) -> dict[str, BaseModel]:
         received_keys = {x['id'] for x in received}
         result: dict[str, BaseModel] = {}
-        for key, value in cached.items():
-            if key in received_keys:
-                result[key] = value  # type: ignore
+
+        if full_sync:
+            for key, value in cached.items():
+                if key in received_keys:
+                    result[key] = value  # type: ignore
+        else:
+            result = {key: value for key, value in cached.items() if not getattr(value, 'is_deleted', False)}
 
         return result
 
@@ -146,9 +150,8 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         self.tasks.update({x['id']: Task(**x) for x in result['items']})
 
         # Remove deleted items
-        if result['full_sync']:
-            self.projects = self._remove_deleted(self.projects, result['projects'])  # type: ignore
-            self.tasks = self._remove_deleted(self.tasks, result['items'])  # type: ignore
+        self.projects = self._remove_deleted(self.projects, result['projects'], result['full_sync'])  # type: ignore
+        self.tasks = self._remove_deleted(self.tasks, result['items'], result['full_sync'])  # type: ignore
 
         self._write_all_caches()
         self._write_sync_token()
