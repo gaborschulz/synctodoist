@@ -10,7 +10,7 @@ import httpx
 from pydantic import BaseModel
 
 from pytodoist.exceptions import TodoistError
-from pytodoist.models import Task, Project, Command
+from pytodoist.models import Task, Project, Command, Label, Section
 
 BASE_URL = 'https://api.todoist.com/sync/v9'
 APIS = {
@@ -19,6 +19,13 @@ APIS = {
     'get_stats': 'completed/get_stats',
     'get_project': 'projects/get',
     'commit': 'sync',
+}
+
+CACHE_MAPPING = {
+    'projects': Project,
+    'tasks': Task,
+    'labels': Label,
+    'sections': Section
 }
 
 
@@ -35,6 +42,8 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         self._sync_token: str = '*'
         self.projects: dict[str, Project] = {}
         self.tasks: dict[str, Task] = {}
+        self.labels: dict[str, Label] = {}
+        self.sections: dict[str, Section] = {}
         self._commands: dict[str, Command] = {}
         self._temp_tasks: dict[str, Task] = {}
 
@@ -44,7 +53,8 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         self._cache_dir = cache_dir if isinstance(cache_dir, Path) else Path(cache_dir)
 
     # PRIVATE METHODS
-    def _remove_deleted(self, cached: Mapping[str, BaseModel], received: list[Any], full_sync: bool = False) -> dict[str, BaseModel]:
+    @staticmethod
+    def _remove_deleted(cached: Mapping[str, BaseModel], received: list[Any], full_sync: bool = False) -> dict[str, BaseModel]:
         received_keys = {x['id'] for x in received}
         result: dict[str, BaseModel] = {}
 
@@ -58,12 +68,13 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         return result
 
     def _write_all_caches(self):
-        self._write_cache(self.projects, 'projects')
-        self._write_cache(self.tasks, 'tasks')
+        for cache_label in CACHE_MAPPING:
+            obj = getattr(self, cache_label)
+            self._write_cache(obj, cache_label)
 
     def _read_all_caches(self):
-        self.projects = self._read_cache('projects')  # type: ignore
-        self.tasks = self._read_cache('tasks')  # type: ignore
+        for cache_label in CACHE_MAPPING:
+            setattr(self, cache_label, self._read_cache(cache_label))
 
     def _write_cache(self, data: Mapping[str, BaseModel], cache_name: str):
         cache = {
@@ -75,10 +86,6 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             json.dump(cache, cache_fp, default=str)
 
     def _read_cache(self, cache_name) -> dict[str, BaseModel]:
-        cache_mapping = {
-            'projects': Project,
-            'tasks': Task
-        }
         cache_file = self._cache_dir / f'todoist_{cache_name}.json'
         if not cache_file.exists():
             return {}
@@ -86,7 +93,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         with cache_file.open('r', encoding='utf-8') as cache_fp:
             cache = json.load(cache_fp)
 
-        model = cache_mapping.get(cache_name, None)
+        model = CACHE_MAPPING.get(cache_name, None)
         if not model:
             return {}
 
@@ -131,11 +138,11 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         self._commands[command.uuid] = command
 
     # PUBLIC METHODS
-    def sync(self, full_sync: bool = False) -> Any:
+    def sync(self, full_sync: bool = False) -> bool:
         """Synchronize with Todoist API
 
         Returns:
-            A dict with all projects
+            True if a full sync was performed, false otherwise
         """
         method_name = inspect.stack()[0][3]
         if not full_sync:
@@ -143,21 +150,25 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         self._read_all_caches()
 
-        data = {'resource_types': ['projects', 'items']}
+        data = {'resource_types': ['projects', 'items', 'labels', 'sections']}
         result = self._post(data, method_name)
         # Add new items
         self.projects.update({x['id']: Project(**x) for x in result['projects']})
         self.tasks.update({x['id']: Task(**x) for x in result['items']})
+        self.labels.update({x['id']: Label(**x) for x in result['labels']})
+        self.sections.update({x['id']: Section(**x) for x in result['sections']})
 
         # Remove deleted items
         self.projects = self._remove_deleted(self.projects, result['projects'], result['full_sync'])  # type: ignore
         self.tasks = self._remove_deleted(self.tasks, result['items'], result['full_sync'])  # type: ignore
+        self.labels = self._remove_deleted(self.labels, result['labels'], result['full_sync'])  # type: ignore
+        self.sections = self._remove_deleted(self.sections, result['sections'], result['full_sync'])  # type: ignore
 
         self._write_all_caches()
         self._write_sync_token()
 
         self.synced = True
-        return result
+        return result['full_sync']  # type: ignore
 
     def get_task(self, task_id: int | str) -> Task:
         """Get task by id
@@ -172,15 +183,18 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         if task:
             return task
 
-        method_name = inspect.stack()[0][3]
-        if isinstance(task_id, str) and task_id.isdigit():
-            task_id = int(task_id)
+        try:
+            method_name = inspect.stack()[0][3]
+            if isinstance(task_id, str) and task_id.isdigit():
+                task_id = int(task_id)
 
-        data = {'item_id': task_id}
-        result = self._post(data, method_name)
-        task = Task(**result.get('item'))
-        self.tasks.update({task.id: task})  # type: ignore
-        return task
+            data = {'item_id': task_id}
+            result = self._post(data, method_name)
+            task = Task(**result.get('item'))
+            self.tasks.update({task.id: task})  # type: ignore
+            return task
+        except Exception as ex:
+            raise TodoistError(f'Task {task_id} not found') from ex
 
     def get_project(self, project_id: int | str) -> Project:
         """Get project by id
@@ -195,17 +209,20 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         if project:
             return project
 
-        method_name = inspect.stack()[0][3]
-        if isinstance(project_id, str):
-            project_id = int(project_id)
+        try:
+            method_name = inspect.stack()[0][3]
+            if isinstance(project_id, str):
+                project_id = int(project_id)
 
-        data = {'project_id': project_id, 'all_data': False}
-        result = self._post(data, method_name)
-        project = Project(**result['project'])
-        self.projects.update({project.id: project})  # type: ignore
-        return project
+            data = {'project_id': project_id, 'all_data': False}
+            result = self._post(data, method_name)
+            project = Project(**result['project'])
+            self.projects.update({project.id: project})  # type: ignore
+            return project
+        except Exception as ex:
+            raise TodoistError(f'Project {project_id} not found') from ex
 
-    def get_project_by_pattern(self, pattern: str) -> Project | None:
+    def get_project_by_pattern(self, pattern: str) -> Project:
         """Get a project if its name matches a regex pattern
 
         Args:
@@ -224,7 +241,79 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             if compiled_pattern.findall(project.name):
                 return project
 
-        return None
+        raise TodoistError(f'Project matching pattern {pattern} not found')
+
+    def get_label(self, label_id: int | str) -> Label | None:
+        """Get label by id
+
+        Args:
+            label_id: the id of the label
+
+        Returns:
+            A Label instance with all project details
+        """
+        label = self.labels.get(str(label_id), None)
+        if label:
+            return label
+
+        raise TodoistError(f'Label {label_id} not found')
+
+    def get_label_by_pattern(self, pattern: str) -> Label:
+        """Get a label if its name matches a regex pattern
+
+        Args:
+            pattern: the regex pattern against which the label's name is matched
+
+        Returns:
+            A Label instance containing the project details
+
+        IMPORTANT: You have to run the .sync() method first for this to work
+        """
+        if not self.synced:
+            raise TodoistError('Run .sync() before you try to find a label based on a pattern')
+
+        compiled_pattern = re.compile(pattern=pattern)
+        for label in self.labels.values():
+            if compiled_pattern.findall(label.name):
+                return label
+
+        raise TodoistError(f'Label matching {pattern} not found')
+
+    def get_section(self, section_id: int | str) -> Section | None:
+        """Get section by id
+
+        Args:
+            section_id: the id of the section
+
+        Returns:
+            A Section instance with all project details
+        """
+        section = self.sections.get(str(section_id), None)
+        if section:
+            return section
+
+        raise TodoistError(f'Section {section_id} not found')
+
+    def get_section_by_pattern(self, pattern: str) -> Section:
+        """Get a section if its name matches a regex pattern
+
+        Args:
+            pattern: the regex pattern against which the section's name is matched
+
+        Returns:
+            A Section instance containing the project details
+
+        IMPORTANT: You have to run the .sync() method first for this to work
+        """
+        if not self.synced:
+            raise TodoistError('Run .sync() before you try to find a section based on a pattern')
+
+        compiled_pattern = re.compile(pattern=pattern)
+        for section in self.sections.values():
+            if compiled_pattern.findall(section.name):
+                return section
+
+        raise TodoistError(f'Section matching {pattern} not found')
 
     def get_stats(self) -> dict:
         """Get Todoist usage statistics
@@ -232,12 +321,15 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A dict with all user stats
         """
-        method_name = inspect.stack()[0][3]
-        url = f'{BASE_URL}/{APIS[method_name]}'
-        with httpx.Client(headers=self._headers) as client:
-            response = client.get(url=url)
-            response.raise_for_status()
-            return response.json()  # type: ignore
+        try:
+            method_name = inspect.stack()[0][3]
+            url = f'{BASE_URL}/{APIS[method_name]}'
+            with httpx.Client(headers=self._headers) as client:
+                response = client.get(url=url)
+                response.raise_for_status()
+                return response.json()  # type: ignore
+        except Exception as ex:
+            raise TodoistError('User stats not available') from ex
 
     def add_task(self, task: Task) -> Any:
         """Add new task to todoist
@@ -297,7 +389,11 @@ if __name__ == '__main__':
     load_dotenv()
     apikey_: str = os.environ.get('TODOIST_API')  # type: ignore
     todoist_ = TodoistAPI(api_key=apikey_)
-    projects_ = todoist_.sync()
+    todoist_.sync()
+    # section = todoist_.get_section(section_id=108544882)
+    # print(section)
+    # section = todoist_.get_section_by_pattern(pattern="Routines")
+    # print(section)
     # project_ = todoist_.get_project_by_pattern('Private')
     # project_ = todoist_.get_project(project_id='2198523714')
     # task_to_add = Task(content="Buy Milk", project_id="2198523714", due=Due(string="today"))

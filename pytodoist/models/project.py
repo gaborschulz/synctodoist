@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from pytodoist.models.utils import str_uuid4_factory
 
 
 class Project(BaseModel):
@@ -15,3 +17,4 @@ class Project(BaseModel):
     is_archived: bool
     is_favorite: bool
     view_style: str | None
+    temp_id: str | None = Field(default_factory=str_uuid4_factory)
