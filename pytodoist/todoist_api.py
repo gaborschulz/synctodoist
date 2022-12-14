@@ -1,13 +1,16 @@
 import inspect
 import json
 import re
+import tempfile
 import uuid
+from pathlib import Path
 from typing import Any
 
 import httpx
+from pydantic import BaseModel
 
 from pytodoist.exceptions import TodoistError
-from pytodoist.models import Task, Project, Due, Command
+from pytodoist.models import Task, Project, Command
 
 BASE_URL = 'https://api.todoist.com/sync/v9'
 APIS = {
@@ -19,10 +22,10 @@ APIS = {
 }
 
 
-class TodoistAPI:  # pylint: disable=too-few-public-methods
+class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     """Todoist API class for the new Sync v9 API"""
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, cache_dir: Path | str | None = None):
         self._api_key = api_key
         self._headers = {
             'Authorization': f'Bearer {self._api_key}',
@@ -30,9 +33,14 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         }
         self.synced = False
         self._sync_token: str = '*'
-        self.projects: list[Project] = []
+        self.projects: dict[str, Project] = {}
         self._commands: dict[str, Command] = {}
         self._temp_tasks: dict[str, Task] = {}
+
+        if not cache_dir:
+            cache_dir = tempfile.gettempdir()
+
+        self._cache_dir = cache_dir if isinstance(cache_dir, Path) else Path(cache_dir)
 
     def sync(self) -> Any:
         """Synchronize with Todoist API
@@ -41,9 +49,13 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
             A dict with all projects
         """
         method_name = inspect.stack()[0][3]
+
+        self._sync_token, self.projects = self._read_cache('projects')  # type: ignore
+
         data = {'resource_types': ['projects']}
         result = self._post(data, method_name)
-        self.projects = [Project(**x) for x in result['projects']]
+        self.projects.update({x['id']: Project(**x) for x in result['projects']})
+        self._write_cache(self.projects, 'projects')
         self.synced = True
         return result
 
@@ -57,8 +69,8 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
             A Task instance with all task details
         """
         method_name = inspect.stack()[0][3]
-        if isinstance(task_id, str):
-            task_id = int(task_id)
+        if isinstance(task_id, int):
+            task_id = str(task_id)
 
         data = {'item_id': task_id}
         result = self._post(data, method_name)
@@ -75,8 +87,8 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
             A Project instance with all project details
         """
         method_name = inspect.stack()[0][3]
-        if isinstance(project_id, str):
-            project_id = int(project_id)
+        if isinstance(project_id, int):
+            project_id = str(project_id)
 
         data = {'project_id': project_id, 'all_data': False}
         result = self._post(data, method_name)
@@ -126,26 +138,26 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
         self._temp_tasks[task.temp_id] = task  # type: ignore
         self._command(data=task.dict(exclude_none=True), command_type='item_add')
 
-    def close_task(self, task_id: int | str | None = None, task: Task | None = None) -> None:
+    def close_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Complete a task
 
         Args:
             task_id: the id of the task to close
-            task: the Task object to close
+            task: the Task object to close (keyword-only argument)
 
-        Either the task_id or the task must be provided. The task object takes priority over the task_id argument
+        Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
         """
         if not task_id and not task:
-            raise ValueError('Either task_id or task have to be provided')
+            raise TodoistError('Either task_id or task have to be provided')
 
         if isinstance(task, Task):
             if not task.id:
                 task_id = task.temp_id
             else:
-                task_id = int(task.id)
+                task_id = str(task.id)
 
-        if isinstance(task_id, str):
-            task_id = int(task_id)
+        if isinstance(task_id, int):
+            task_id = str(task_id)
 
         self._command(data={'id': task_id}, command_type='item_complete')
 
@@ -191,6 +203,34 @@ class TodoistAPI:  # pylint: disable=too-few-public-methods
             self._sync_token = result.pop('sync_token')
         return result
 
+    def _write_cache(self, data: dict[str, BaseModel], cache_name: str):
+        cache = {
+            'name': cache_name,
+            'sync_token': self._sync_token,
+            'data': {key: value.dict(exclude_none=True) for key, value in data.items()}
+        }
+
+        with (self._cache_dir / f'{cache_name}.json').open('w', encoding='utf-8') as cache_fp:
+            json.dump(cache, cache_fp)
+
+    def _read_cache(self, cache_name) -> tuple[str, dict[str, BaseModel]]:
+        cache_mapping = {
+            'projects': Project
+        }
+        cache_file = self._cache_dir / f'{cache_name}.json'
+        if not cache_file.exists():
+            return '*', {}
+
+        with cache_file.open('r', encoding='utf-8') as cache_fp:
+            cache = json.load(cache_fp)
+
+        model = cache_mapping.get(cache_name, None)
+        if not model:
+            return '*', {}
+
+        entities = {key: model(**value) for key, value in cache['data'].items()}
+        return cache['sync_token'], entities
+
 
 if __name__ == '__main__':
     import os
@@ -198,13 +238,13 @@ if __name__ == '__main__':
     apikey_: str = os.environ.get('TODOIST_API')  # type: ignore
     todoist_ = TodoistAPI(api_key=apikey_)
     projects_ = todoist_.sync()
-    project_ = todoist_.get_project_by_pattern('Private')
+    # project_ = todoist_.get_project_by_pattern('Private')
     # project_ = todoist_.get_project(project_id='2198523714')
-    task_to_add = Task(content="Buy Milk", project_id="2198523714", due=Due(string="today"))
-    todoist_.add_task(task_to_add)
+    # task_to_add = Task(content="Buy Milk", project_id="2198523714", due=Due(string="today"))
+    # todoist_.add_task(task_to_add)
     # added_task_0 = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
     # added_task_1 = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
     # completed_task_ = todoist_.close_task(task_id=6428239110)
-    result_ = todoist_.commit()
+    # result_ = todoist_.commit()
     # t = todoist_.get_task(task_id='6429400765')
-    print(project_)
+    # print(project_)
