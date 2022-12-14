@@ -98,6 +98,15 @@ def test_get_task_str_id(todoist):
     assert task.content
 
 
+def test_get_task_cached(todoist):
+    todoist.sync()
+    task_id = TASK_ID[0]
+    assert task_id in todoist.tasks
+    task = todoist.get_task(task_id=str(TASK_ID[0]))
+    assert task.id == str(TASK_ID[0])
+    assert task.content
+
+
 def test_get_task_int_id(todoist):
     task = todoist.get_task(task_id=int(TASK_ID[0]))
     assert task.id == str(TASK_ID[0])
