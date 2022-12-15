@@ -45,7 +45,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         self.labels: dict[str, Label] = {}
         self.sections: dict[str, Section] = {}
         self._commands: dict[str, Command] = {}
-        self._temp_tasks: dict[str, Task] = {}
+        self._temp_items: Mapping[str, BaseModel] = {}
 
         if not cache_dir:
             cache_dir = tempfile.gettempdir()
@@ -331,13 +331,13 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         except Exception as ex:
             raise TodoistError('User stats not available') from ex
 
-    def add_task(self, task: Task) -> Any:
+    def add_task(self, task: Task) -> None:
         """Add new task to todoist
 
         Args:
             task: a Task instance to add to Todoist
         """
-        self._temp_tasks[task.temp_id] = task  # type: ignore
+        self._temp_items[task.temp_id] = task  # type: ignore
         self._command(data=task.dict(exclude_none=True), command_type='item_add')
 
     def close_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
@@ -363,6 +363,33 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         self._command(data={'id': task_id}, command_type='item_complete')
 
+    def add_project(self, project: Project) -> None:
+        """Add new project to todoist
+
+        Args:
+            project: a Project instance to add to Todoist
+        """
+        self._temp_items[project.temp_id] = project  # type: ignore
+        self._command(data=project.dict(exclude_none=True), command_type='project_add')
+
+    def add_section(self, section: Section) -> None:
+        """Add new section to todoist
+
+        Args:
+            section: a Section instance to add to Todoist
+        """
+        self._temp_items[section.temp_id] = section  # type: ignore
+        self._command(data=section.dict(exclude_none=True), command_type='section_add')
+
+    def add_label(self, label: Label) -> None:
+        """Add new label to todoist
+
+        Args:
+            label: a Label instance to add to Todoist
+        """
+        self._temp_items[label.temp_id] = label  # type: ignore
+        self._command(data=label.dict(exclude_none=True), command_type='label_add')
+
     def commit(self) -> Any:
         """Commit open commands to Todoist"""
         method_name = inspect.stack()[0][3]
@@ -374,9 +401,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
                 self._commands.pop(key)
 
         for key, value in result['temp_id_mapping'].items():
-            task = self._temp_tasks[key]
-            task.id = value
-            self._temp_tasks.pop(key)
+            item = self._temp_items[key]
+            item.id = value  # type: ignore
+            self._temp_items.pop(key)  # type: ignore
 
         self.sync()
         return result
@@ -390,6 +417,7 @@ if __name__ == '__main__':
     apikey_: str = os.environ.get('TODOIST_API')  # type: ignore
     todoist_ = TodoistAPI(api_key=apikey_)
     todoist_.sync()
+    pass
     # section = todoist_.get_section(section_id=108544882)
     # print(section)
     # section = todoist_.get_section_by_pattern(pattern="Routines")
