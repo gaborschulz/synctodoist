@@ -10,7 +10,7 @@ import httpx
 from pydantic import BaseModel
 
 from pytodoist.exceptions import TodoistError
-from pytodoist.models import Task, Project, Command, Label, Section
+from pytodoist.models import Task, Project, Command, Label, Section, Reminder, Due
 
 BASE_URL = 'https://api.todoist.com/sync/v9'
 APIS = {
@@ -25,7 +25,8 @@ CACHE_MAPPING = {
     'projects': Project,
     'tasks': Task,
     'labels': Label,
-    'sections': Section
+    'sections': Section,
+    'reminders': Reminder
 }
 
 
@@ -44,6 +45,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         self.tasks: dict[str, Task] = {}
         self.labels: dict[str, Label] = {}
         self.sections: dict[str, Section] = {}
+        self.reminders: dict[str, Reminder] = {}
         self._commands: dict[str, Command] = {}
         self._temp_items: Mapping[str, BaseModel] = {}
 
@@ -150,19 +152,21 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         self._read_all_caches()
 
-        data = {'resource_types': ['projects', 'items', 'labels', 'sections']}
+        data = {'resource_types': ['projects', 'items', 'labels', 'sections', 'reminders']}
         result = self._post(data, method_name)
         # Add new items
         self.projects.update({x['id']: Project(**x) for x in result['projects']})
         self.tasks.update({x['id']: Task(**x) for x in result['items']})
         self.labels.update({x['id']: Label(**x) for x in result['labels']})
         self.sections.update({x['id']: Section(**x) for x in result['sections']})
+        self.reminders.update({x['id']: Reminder(**x) for x in result['reminders']})
 
         # Remove deleted items
         self.projects = self._remove_deleted(self.projects, result['projects'], result['full_sync'])  # type: ignore
         self.tasks = self._remove_deleted(self.tasks, result['items'], result['full_sync'])  # type: ignore
         self.labels = self._remove_deleted(self.labels, result['labels'], result['full_sync'])  # type: ignore
         self.sections = self._remove_deleted(self.sections, result['sections'], result['full_sync'])  # type: ignore
+        self.reminders = self._remove_deleted(self.reminders, result['reminders'], result['full_sync'])  # type: ignore
 
         self._write_all_caches()
         self._write_sync_token()
@@ -363,6 +367,29 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         self._command(data={'id': task_id}, command_type='item_complete')
 
+    def reopen_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
+        """Uncomplete a task
+
+        Args:
+            task_id: the id of the task to reopen
+            task: the Task object to reopen (keyword-only argument)
+
+        Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
+        """
+        if not task_id and not task:
+            raise TodoistError('Either task_id or task have to be provided')
+
+        if isinstance(task, Task):
+            if not task.id:
+                task_id = task.temp_id
+            else:
+                task_id = str(task.id)
+
+        if isinstance(task_id, int):
+            task_id = str(task_id)
+
+        self._command(data={'id': task_id}, command_type='item_uncomplete')
+
     def add_project(self, project: Project) -> None:
         """Add new project to todoist
 
@@ -417,18 +444,23 @@ if __name__ == '__main__':
     apikey_: str = os.environ.get('TODOIST_API')  # type: ignore
     todoist_ = TodoistAPI(api_key=apikey_)
     todoist_.sync()
-    pass
     # section = todoist_.get_section(section_id=108544882)
     # print(section)
     # section = todoist_.get_section_by_pattern(pattern="Routines")
     # print(section)
     # project_ = todoist_.get_project_by_pattern('Private')
     # project_ = todoist_.get_project(project_id='2198523714')
-    # task_to_add = Task(content="Buy Milk", project_id="2198523714", due=Due(string="today"))
-    # todoist_.add_task(task_to_add)
+    task_to_add = Task(content="Buy Honey", project_id="2198523714", due=Due(string="today"))
+    todoist_.add_task(task_to_add)
+    todoist_.commit()
+    todoist_.close_task(task=task_to_add)
+    todoist_.commit()
+    todoist_.reopen_task(task=task_to_add)
+    todoist_.commit()
     # added_task_0 = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
     # added_task_1 = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
     # completed_task_ = todoist_.close_task(task_id=6428239110)
     # result_ = todoist_.commit()
     # t = todoist_.get_task(task_id='6429400765')
     # print(project_)
+    print(todoist_)
