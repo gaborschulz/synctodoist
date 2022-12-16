@@ -1,4 +1,4 @@
-# PyTodoist
+# SyncTodoist
 
 [![python: 3.11](https://img.shields.io/badge/python-3.11-green)](https://python.org)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)

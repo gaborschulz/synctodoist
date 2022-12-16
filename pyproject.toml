@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "pytodoist"
+name = "synctodoist"
 version = "0.1.3"
 description = "A Python client for the Todoist Sync v9 API"
 license = "MIT"
-authors = ["Gabor Schulz <gabor@gaborschulz.com>"]
+authors = ["Gabor Schulz"]
 readme = "README.md"
 homepage = ""
-repository = "https://github.com/gaborschulz/pytodoist"
+repository = "https://github.com/gaborschulz/synctodoist"
 documentation = ""
 keywords = []
 classifiers = [
@@ -20,7 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11"
 ]  # https://pypi.org/classifiers/
-packages = [{ include = "pytodoist" }]
+packages = [{ include = "synctodoist" }]
 
 [tool.poetry.scripts]
 
