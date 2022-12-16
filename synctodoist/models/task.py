@@ -1,14 +1,11 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
-
 from .due import Due
-from .utils import str_uuid4_factory
+from .todoist_base_model import TodoistBaseModel
 
 
-class Task(BaseModel):
+class Task(TodoistBaseModel):
     """Task model"""
-    id: str | None
     user_id: str | int | None
     project_id: str | int | None
     content: str | None
@@ -25,7 +22,9 @@ class Task(BaseModel):
     assigned_by_uid: str | int | None
     responsible_uid: str | int | None
     checked: bool | None
-    is_deleted: bool | None
     sync_id: str | int | None
     added_at: datetime | None
-    temp_id: str | None = Field(default_factory=str_uuid4_factory)
+
+    cache_label: str = 'tasks'
+    todoist_name: str = 'item'
+    todoist_field_name: str = 'items'

@@ -4,9 +4,9 @@ import os
 import pytest
 from dotenv import load_dotenv
 
-from pytodoist import TodoistAPI
-from pytodoist.exceptions import TodoistError
-from pytodoist.models import Task, Due
+from synctodoist import TodoistAPI
+from synctodoist.exceptions import TodoistError
+from synctodoist.models import Task, Due
 
 load_dotenv()
 API_KEY = os.environ.get('TODOIST_API')

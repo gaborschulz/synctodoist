@@ -9,8 +9,8 @@ from typing import Any, Mapping
 import httpx
 from pydantic import BaseModel
 
-from pytodoist.exceptions import TodoistError
-from pytodoist.models import Task, Project, Command, Label, Section, Reminder, Due
+from synctodoist.exceptions import TodoistError
+from synctodoist.models import Task, Project, Command, Label, Section, Reminder, Due, TodoistBaseModel
 
 BASE_URL = 'https://api.todoist.com/sync/v9'
 APIS = {
@@ -21,13 +21,7 @@ APIS = {
     'commit': 'sync',
 }
 
-CACHE_MAPPING = {
-    'projects': Project,
-    'tasks': Task,
-    'labels': Label,
-    'sections': Section,
-    'reminders': Reminder
-}
+CACHE_MAPPING = {x.cache_label: x for x in TodoistBaseModel.__subclasses__()}
 
 
 class TodoistAPI:  # pylint: disable=too-many-instance-attributes
@@ -154,19 +148,14 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         data = {'resource_types': ['projects', 'items', 'labels', 'sections', 'reminders']}
         result = self._post(data, method_name)
-        # Add new items
-        self.projects.update({x['id']: Project(**x) for x in result['projects']})
-        self.tasks.update({x['id']: Task(**x) for x in result['items']})
-        self.labels.update({x['id']: Label(**x) for x in result['labels']})
-        self.sections.update({x['id']: Section(**x) for x in result['sections']})
-        self.reminders.update({x['id']: Reminder(**x) for x in result['reminders']})
 
-        # Remove deleted items
-        self.projects = self._remove_deleted(self.projects, result['projects'], result['full_sync'])  # type: ignore
-        self.tasks = self._remove_deleted(self.tasks, result['items'], result['full_sync'])  # type: ignore
-        self.labels = self._remove_deleted(self.labels, result['labels'], result['full_sync'])  # type: ignore
-        self.sections = self._remove_deleted(self.sections, result['sections'], result['full_sync'])  # type: ignore
-        self.reminders = self._remove_deleted(self.reminders, result['reminders'], result['full_sync'])  # type: ignore
+        for key in CACHE_MAPPING:
+            target = getattr(self, key)  # type: ignore
+            model = CACHE_MAPPING[key]
+            # Add new items
+            target.update({x['id']: CACHE_MAPPING[key](**x) for x in result[model.todoist_field_name]})
+            # Remove deleted items
+            setattr(self, key, self._remove_deleted(target, result[model.todoist_field_name], result['full_sync']))  # type: ignore
 
         self._write_all_caches()
         self._write_sync_token()
@@ -342,6 +331,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             task: a Task instance to add to Todoist
         """
         self._temp_items[task.temp_id] = task  # type: ignore
+        print(task.dict())
         self._command(data=task.dict(exclude_none=True), command_type='item_add')
 
     def close_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:

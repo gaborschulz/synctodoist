@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from pytodoist.models.utils import str_uuid4_factory
+from synctodoist.models.utils import str_uuid4_factory
 
 
 class Command(BaseModel):

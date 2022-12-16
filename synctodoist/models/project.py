@@ -1,11 +1,8 @@
-from pydantic import BaseModel, Field
-
-from pytodoist.models.utils import str_uuid4_factory
+from .todoist_base_model import TodoistBaseModel
 
 
-class Project(BaseModel):
+class Project(TodoistBaseModel):
     """Project model"""
-    id: str | int | None
     name: str
     color: str
     parent_id: str | int | None
@@ -13,8 +10,10 @@ class Project(BaseModel):
     collapsed: bool = False
     shared: bool = False
     sync_id: str | int | None
-    is_deleted: bool = False
     is_archived: bool = False
     is_favorite: bool = False
     view_style: str | None
-    temp_id: str | None = Field(default_factory=str_uuid4_factory)
+
+    cache_label: str = 'projects'
+    todoist_name: str = 'project'
+    todoist_field_name: str = 'projects'
