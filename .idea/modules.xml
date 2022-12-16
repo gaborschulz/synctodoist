@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/pytodoist.iml" filepath="$PROJECT_DIR$/.idea/pytodoist.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/synctodoist.iml" filepath="$PROJECT_DIR$/.idea/synctodoist.iml" />
     </modules>
   </component>
 </project>

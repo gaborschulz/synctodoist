@@ -25,6 +25,9 @@ class Task(TodoistBaseModel):
     sync_id: str | int | None
     added_at: datetime | None
 
-    cache_label: str = 'tasks'
-    todoist_name: str = 'item'
-    todoist_field_name: str = 'items'
+    class Config:
+        """Config for Task model"""
+        cache_label: str = 'tasks'
+        todoist_name: str = 'item'
+        todoist_resource_type: str = 'items'
+        command_add: str = 'item_add'

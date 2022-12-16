@@ -15,6 +15,9 @@ class Reminder(TodoistBaseModel):
     loc_trigger: str | None
     radius: int | None
 
-    cache_label: str = 'reminders'
-    todoist_name: str = 'reminder'
-    todoist_field_name: str = 'reminders'
+    class Config:
+        """Config for Reminder model"""
+        cache_label: str = 'reminders'
+        todoist_name: str = 'reminder'
+        todoist_resource_type: str = 'reminders'
+        command_add: str = 'reminder_add'

@@ -8,6 +8,9 @@ class Label(TodoistBaseModel):
     item_order: int | None
     is_favorite: bool = False
 
-    cache_label: str = 'labels'
-    todoist_name: str = 'label'
-    todoist_field_name: str = 'labels'
+    class Config:
+        """Config for Label model"""
+        cache_label: str = 'labels'
+        todoist_name: str = 'label'
+        todoist_resource_type: str = 'labels'
+        command_add: str = 'label_add'

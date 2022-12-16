@@ -74,8 +74,8 @@ def test_get_project_by_pattern_synced_existing(synced_todoist, project_inbox):
 
 
 def test_get_project_by_pattern_synced_notexisting(synced_todoist):
-    project = synced_todoist.get_project_by_pattern(pattern='NON_EXISTING_PROJECT')
-    assert project is None
+    with pytest.raises(TodoistError):
+        synced_todoist.get_project_by_pattern(pattern='NON_EXISTING_PROJECT')
 
 
 def test_get_stats(todoist):

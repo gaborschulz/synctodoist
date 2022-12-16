@@ -14,6 +14,9 @@ class Project(TodoistBaseModel):
     is_favorite: bool = False
     view_style: str | None
 
-    cache_label: str = 'projects'
-    todoist_name: str = 'project'
-    todoist_field_name: str = 'projects'
+    class Config:
+        """Config for Project model"""
+        cache_label: str = 'projects'
+        todoist_name: str = 'project'
+        todoist_resource_type: str = 'projects'
+        command_add: str = 'project_add'

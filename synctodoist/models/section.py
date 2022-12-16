@@ -15,6 +15,9 @@ class Section(TodoistBaseModel):
     archived_at: datetime | None
     added_at: datetime | None
 
-    cache_label: str = 'sections'
-    todoist_name: str = 'section'
-    todoist_field_name: str = 'sections'
+    class Config:
+        """Config for Section model"""
+        cache_label: str = 'sections'
+        todoist_name: str = 'section'
+        todoist_resource_type: str = 'sections'
+        command_add: str = 'section_add'

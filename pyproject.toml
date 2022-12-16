@@ -80,5 +80,6 @@ extension-pkg-whitelist = "pydantic"
 disable = """
     missing-module-docstring,
     duplicate-code,
-    too-many-ancestors
+    too-many-ancestors,
+    too-few-public-methods
 """

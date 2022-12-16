@@ -21,7 +21,8 @@ APIS = {
     'commit': 'sync',
 }
 
-CACHE_MAPPING = {x.cache_label: x for x in TodoistBaseModel.__subclasses__()}
+CACHE_MAPPING = {x.Config.cache_label: x for x in TodoistBaseModel.__subclasses__()}
+RESOURCE_TYPES = [x.Config.todoist_resource_type for x in TodoistBaseModel.__subclasses__()]
 
 
 class TodoistAPI:  # pylint: disable=too-many-instance-attributes
@@ -41,7 +42,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         self.sections: dict[str, Section] = {}
         self.reminders: dict[str, Reminder] = {}
         self._commands: dict[str, Command] = {}
-        self._temp_items: Mapping[str, BaseModel] = {}
+        self._temp_items: Mapping[str, TodoistBaseModel] = {}
 
         if not cache_dir:
             cache_dir = tempfile.gettempdir()
@@ -146,16 +147,16 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         self._read_all_caches()
 
-        data = {'resource_types': ['projects', 'items', 'labels', 'sections', 'reminders']}
+        data = {'resource_types': RESOURCE_TYPES}
         result = self._post(data, method_name)
 
         for key in CACHE_MAPPING:
             target = getattr(self, key)  # type: ignore
             model = CACHE_MAPPING[key]
             # Add new items
-            target.update({x['id']: CACHE_MAPPING[key](**x) for x in result[model.todoist_field_name]})
+            target.update({x['id']: CACHE_MAPPING[key](**x) for x in result[model.Config.todoist_resource_type]})
             # Remove deleted items
-            setattr(self, key, self._remove_deleted(target, result[model.todoist_field_name], result['full_sync']))  # type: ignore
+            setattr(self, key, self._remove_deleted(target, result[model.Config.todoist_resource_type], result['full_sync']))  # type: ignore
 
         self._write_all_caches()
         self._write_sync_token()
@@ -324,15 +325,24 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         except Exception as ex:
             raise TodoistError('User stats not available') from ex
 
+    def add(self, item: TodoistBaseModel) -> None:
+        """Add new task to todoist
+
+        Args:
+            item: a TodoistBaseModel instance to add to Todoist
+        """
+        self._temp_items[item.temp_id] = item  # type: ignore
+        model = type(item)
+        print(model.Config.command_add)
+        self._command(data=item.dict(exclude_none=True), command_type=model.Config.command_add)
+
     def add_task(self, task: Task) -> None:
         """Add new task to todoist
 
         Args:
             task: a Task instance to add to Todoist
         """
-        self._temp_items[task.temp_id] = task  # type: ignore
-        print(task.dict())
-        self._command(data=task.dict(exclude_none=True), command_type='item_add')
+        self.add(task)
 
     def close_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Complete a task
@@ -386,8 +396,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Args:
             project: a Project instance to add to Todoist
         """
-        self._temp_items[project.temp_id] = project  # type: ignore
-        self._command(data=project.dict(exclude_none=True), command_type='project_add')
+        self.add(project)
 
     def add_section(self, section: Section) -> None:
         """Add new section to todoist
@@ -395,8 +404,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Args:
             section: a Section instance to add to Todoist
         """
-        self._temp_items[section.temp_id] = section  # type: ignore
-        self._command(data=section.dict(exclude_none=True), command_type='section_add')
+        self.add(section)
 
     def add_label(self, label: Label) -> None:
         """Add new label to todoist
@@ -404,8 +412,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Args:
             label: a Label instance to add to Todoist
         """
-        self._temp_items[label.temp_id] = label  # type: ignore
-        self._command(data=label.dict(exclude_none=True), command_type='label_add')
+        self.add(label)
 
     def commit(self) -> Any:
         """Commit open commands to Todoist"""
@@ -441,7 +448,7 @@ if __name__ == '__main__':
     # project_ = todoist_.get_project_by_pattern('Private')
     # project_ = todoist_.get_project(project_id='2198523714')
     task_to_add = Task(content="Buy Honey", project_id="2198523714", due=Due(string="today"))
-    todoist_.add_task(task_to_add)
+    todoist_.add(task_to_add)
     todoist_.commit()
     todoist_.close_task(task=task_to_add)
     todoist_.commit()
