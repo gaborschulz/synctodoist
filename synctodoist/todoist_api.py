@@ -13,19 +13,21 @@ from synctodoist.exceptions import TodoistError
 from synctodoist.managers import ProjectManager
 from synctodoist.models import Task, Project, Command, Label, Section, Reminder, Due, TodoistBaseModel
 
+BASE_URL = 'https://api.todoist.com/sync/v9'
+APIS = {
+    'sync': 'sync',
+    'get_task': 'items/get',
+    'get_stats': 'completed/get_stats',
+    'get_project': 'projects/get',
+    'commit': 'sync',
+}
+
 CACHE_MAPPING = {x.Config.cache_label: x for x in TodoistBaseModel.__subclasses__()}
 RESOURCE_TYPES = [x.Config.todoist_resource_type for x in TodoistBaseModel.__subclasses__()]
 
 
 class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     """Todoist API class for the new Sync v9 API"""
-    base_url = 'https://api.todoist.com/sync/v9'
-    apis = {
-        'sync': 'sync',
-        'get_task': 'items/get',
-        'get_stats': 'completed/get_stats',
-        'commit': 'sync',
-    }
 
     def __init__(self, api_key: str, cache_dir: Path | str | None = None):
         self._api_key = api_key
@@ -188,6 +190,32 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             return task
         except Exception as ex:
             raise TodoistError(f'Task {task_id} not found') from ex
+
+    def get_project(self, project_id: int | str) -> Project:
+        """Get project by id
+
+        Args:
+            project_id: the id of the project
+
+        Returns:
+            A Project instance with all project details
+        """
+        project = self.projects.get(str(project_id), None)
+        if project:
+            return project
+
+        try:
+            method_name = inspect.stack()[0][3]
+            if isinstance(project_id, str):
+                project_id = int(project_id)
+
+            data = {'project_id': project_id, 'all_data': False}
+            result = self._post(data, method_name)
+            project = Project(**result['project'])
+            self.projects.update({project.id: project})  # type: ignore
+            return project
+        except Exception as ex:
+            raise TodoistError(f'Project {project_id} not found') from ex
 
     def get_project_by_pattern(self, pattern: str) -> Project:
         """Get a project if its name matches a regex pattern
