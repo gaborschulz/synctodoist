@@ -4,7 +4,7 @@ from .todoist_base_model import TodoistBaseModel
 class Project(TodoistBaseModel):
     """Project model"""
     name: str
-    color: str
+    color: str | None
     parent_id: str | int | None
     child_order: int | None
     collapsed: bool = False

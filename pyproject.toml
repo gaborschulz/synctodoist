@@ -82,5 +82,6 @@ disable = """
     missing-module-docstring,
     duplicate-code,
     too-many-ancestors,
-    too-few-public-methods
+    too-few-public-methods,
+    too-many-public-methods
 """
