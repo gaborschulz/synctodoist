@@ -263,6 +263,17 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         self.add(section)
 
+    def delete_section(self, section_id: int | str | None = None, *, section: Section | None = None) -> None:
+        """Delete a section
+
+        Args:
+            section_id: the id of the section to delete
+            section: the Section object to delete (keyword-only argument)
+
+        Either the section_id or the section must be provided. The section object takes priority over the section_id argument if both are provided
+        """
+        self.sections.delete(section_id=section_id, section=section)
+
     def add_label(self, label: Label) -> None:
         """Add new label to todoist.
 

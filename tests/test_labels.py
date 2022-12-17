@@ -14,6 +14,11 @@ def test_get_label_str_id(synced_todoist, label_added):
     assert label.name == label_added.name
 
 
+def test_get_label_by_pattern(synced_todoist, label_added):
+    label = synced_todoist.get_label_by_pattern(pattern='test')
+    assert 'test' in label.name
+
+
 def test_get_label_unsynced(todoist, label_added):
     with pytest.raises(TodoistError):
         todoist.get_label(label_id=label_added.id)

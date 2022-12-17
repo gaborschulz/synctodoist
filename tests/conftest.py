@@ -7,7 +7,7 @@ import pytest
 from dotenv import load_dotenv
 
 from synctodoist import TodoistAPI
-from synctodoist.models import Task, Due, Project, Label
+from synctodoist.models import Task, Due, Project, Label, Section
 
 load_dotenv()
 API_KEY = os.environ.get('TODOIST_API')
@@ -38,6 +38,7 @@ def task_added(synced_todoist, project_inbox):
     synced_todoist.commit()
     yield task
     synced_todoist.delete_task(task=task)
+    synced_todoist.commit()
 
 
 @pytest.fixture
@@ -47,6 +48,7 @@ def project_added(synced_todoist):
     synced_todoist.commit()
     yield project
     synced_todoist.delete_project(project=project)
+    synced_todoist.commit()
 
 
 @pytest.fixture
@@ -56,3 +58,14 @@ def label_added(synced_todoist):
     synced_todoist.commit()
     yield label
     synced_todoist.delete_label(label=label)
+    synced_todoist.commit()
+
+
+@pytest.fixture
+def section_added(synced_todoist, project_added):
+    section = Section(name=f'test_{int(datetime.now().timestamp())}_{randint(0, 10000)}', project_id=project_added.id)
+    synced_todoist.add_section(section)
+    synced_todoist.commit()
+    yield section
+    synced_todoist.delete_section(section=section)
+    synced_todoist.commit()
