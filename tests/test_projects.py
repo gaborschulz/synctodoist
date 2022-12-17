@@ -22,7 +22,6 @@ def test_get_project_by_pattern_unsynced(todoist):
 
 
 def test_get_project_by_pattern_synced_existing(synced_todoist, project_inbox):
-    print(project_inbox)
     assert project_inbox.name == 'Inbox'
 
 
