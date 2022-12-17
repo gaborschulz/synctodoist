@@ -316,6 +316,23 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         return self.tasks.get_by_id(task_id=task_id)
 
+    def move_task(self, task: Task, parent: str | int | Task | None = None, section: str | int | Section | None = None,
+                  project: str | int | Project | None = None) -> None:
+        """
+        Move task to a different parent, section or project
+
+        One of the parameters has to be provided.
+
+        To move an item from a section to no section, just use the project_id parameter, with the project it currently belongs to as a value.
+
+        Args:
+            task: a Task instance that you want to move
+            parent: the parent under which you want to place the task
+            section: the section in which you want to place the task
+            project: the project in which you want to place the task
+        """
+        self.tasks.move(task=task, parent=parent, section=section, project=project)
+
     def get_task_by_pattern(self, pattern: str, return_all: bool = False) -> Task | list[Task]:
         """Get a project if its name matches a regex pattern
 

@@ -2,6 +2,8 @@ from synctodoist.exceptions import TodoistError
 from synctodoist.managers import command_manager
 from synctodoist.managers.base_manager import BaseManager
 from synctodoist.models import Task
+from synctodoist.models.project import Project
+from synctodoist.models.section import Section
 
 
 class TaskManager(BaseManager[Task]):
@@ -33,7 +35,8 @@ class TaskManager(BaseManager[Task]):
         except Exception as ex:
             raise TodoistError(f'Task {task_id} not found') from ex
 
-    def close(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
+    @staticmethod
+    def close(task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Complete a task
 
         Args:
@@ -56,7 +59,8 @@ class TaskManager(BaseManager[Task]):
 
         command_manager.add_command(data={'id': task_id}, command_type='item_complete')
 
-    def reopen(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
+    @staticmethod
+    def reopen(task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Uncomplete a task
 
         Args:
@@ -79,7 +83,8 @@ class TaskManager(BaseManager[Task]):
 
         command_manager.add_command(data={'id': task_id}, command_type='item_uncomplete')
 
-    def delete(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
+    @staticmethod
+    def delete(task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Delete a task
 
         Args:
@@ -102,3 +107,54 @@ class TaskManager(BaseManager[Task]):
             task_id = str(task_id)
 
         command_manager.add_command(data={'id': task_id}, command_type='item_delete')
+
+    @staticmethod
+    def move(task: Task, parent: str | int | Task | None = None, section: str | int | Section | None = None, project: str | int | Project | None = None):
+        """
+        Move task to a different parent, section or project
+
+        One of the parameters has to be provided.
+
+        To move an item from a section to no section, just use the project_id parameter, with the project it currently belongs to as a value.
+
+        Args:
+            task: a Task instance that you want to move
+            parent: the parent under which you want to place the task
+            section: the section in which you want to place the task
+            project: the project in which you want to place the task
+        """
+        if not parent and not section and not project:
+            raise TodoistError('At least one out of parent, section or project has to be provided.')
+
+        data: dict[str, str] = {'id': str(task.id)}
+        match parent:
+            case Task():
+                data['parent_id'] = str(parent.id)
+            case int():
+                data['parent_id'] = str(parent)
+            case str():
+                data['parent_id'] = parent
+            case _:
+                raise TypeError('Unsupported type for parent')
+
+        match section:
+            case Task():
+                data['section_id'] = str(section.id)
+            case int():
+                data['section_id'] = str(section)
+            case str():
+                data['section_id'] = section
+            case _:
+                raise TypeError('Unsupported type for section')
+
+        match project:
+            case Task():
+                data['project_id'] = str(project.id)
+            case int():
+                data['project_id'] = str(project)
+            case str():
+                data['project_id'] = project
+            case _:
+                raise TypeError('Unsupported type for project')
+
+        command_manager.add_command(data=data, command_type='item_move')
