@@ -38,12 +38,6 @@ def task_added(synced_todoist, project_inbox):
     return task_added
 
 
-def test_init(todoist):
-    assert todoist._api_key == API_KEY
-    assert 'Authorization' in todoist._headers
-    assert 'Content-Type' in todoist._headers
-
-
 def test_sync(todoist):
     assert not todoist.synced
     todoist.sync()

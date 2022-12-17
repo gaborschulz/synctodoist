@@ -1,26 +1,11 @@
 import inspect
-import json
 import re
-import tempfile
-import uuid
 from pathlib import Path
-from typing import Any, Mapping
-
-import httpx
-from pydantic import BaseModel
+from typing import Any
 
 from synctodoist.exceptions import TodoistError
-from synctodoist.managers import ProjectManager
-from synctodoist.models import Task, Project, Command, Label, Section, Reminder, Due, TodoistBaseModel
-
-BASE_URL = 'https://api.todoist.com/sync/v9'
-APIS = {
-    'sync': 'sync',
-    'get_task': 'items/get',
-    'get_stats': 'completed/get_stats',
-    'get_project': 'projects/get',
-    'commit': 'sync',
-}
+from synctodoist.managers import ProjectManager, command_manager, TaskManager, LabelManager, SectionManager, ReminderManager
+from synctodoist.models import Task, Project, Label, Section, TodoistBaseModel
 
 CACHE_MAPPING = {x.Config.cache_label: x for x in TodoistBaseModel.__subclasses__()}
 RESOURCE_TYPES = [x.Config.todoist_resource_type for x in TodoistBaseModel.__subclasses__()]
@@ -30,110 +15,28 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     """Todoist API class for the new Sync v9 API"""
 
     def __init__(self, api_key: str, cache_dir: Path | str | None = None):
-        self._api_key = api_key
-        self._headers = {
-            'Authorization': f'Bearer {self._api_key}',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
+        self.api_key = api_key
         self.synced = False
-        self._sync_token: str = '*'
-        self.projects: ProjectManager = ProjectManager(api=self)
-        self.tasks: dict[str, Task] = {}
-        self.labels: dict[str, Label] = {}
-        self.sections: dict[str, Section] = {}
-        self.reminders: dict[str, Reminder] = {}
-        self._commands: dict[str, Command] = {}
-        self._temp_items: Mapping[str, TodoistBaseModel] = {}
+        self.projects: ProjectManager = ProjectManager(api=self, cache_dir=cache_dir)
+        self.tasks: TaskManager = TaskManager(api=self, cache_dir=cache_dir)
+        self.labels: LabelManager = LabelManager(api=self, cache_dir=cache_dir)
+        self.sections: SectionManager = SectionManager(api=self, cache_dir=cache_dir)
+        self.reminders: ReminderManager = ReminderManager(api=self, cache_dir=cache_dir)
 
-        if not cache_dir:
-            cache_dir = tempfile.gettempdir()
-
-        self._cache_dir = cache_dir if isinstance(cache_dir, Path) else Path(cache_dir)
+        if cache_dir:
+            command_manager.cache_dir = cache_dir if isinstance(cache_dir, Path) else Path(cache_dir)
 
     # PRIVATE METHODS
-    @staticmethod
-    def _remove_deleted(cached: Mapping[str, BaseModel], received: list[Any], full_sync: bool = False) -> dict[str, BaseModel]:
-        received_keys = {x['id'] for x in received}
-        result: dict[str, BaseModel] = {}
-
-        if full_sync:
-            for key, value in cached.items():
-                if key in received_keys:
-                    result[key] = value  # type: ignore
-        else:
-            result = {key: value for key, value in cached.items() if not getattr(value, 'is_deleted', False)}
-
-        return result
 
     def _write_all_caches(self):
-        for cache_label in CACHE_MAPPING:
-            obj = getattr(self, cache_label)
-            self._write_cache(obj, cache_label)
+        for key in CACHE_MAPPING:
+            target = getattr(self, key)
+            target.write_cache()
 
     def _read_all_caches(self):
-        for cache_label in CACHE_MAPPING:
-            setattr(self, cache_label, self._read_cache(cache_label))
-
-    def _write_cache(self, data: Mapping[str, BaseModel], cache_name: str):
-        cache = {
-            'name': cache_name,
-            'data': {key: value.dict(exclude_none=True) for key, value in data.items()}
-        }
-
-        with (self._cache_dir / f'todoist_{cache_name}.json').open('w', encoding='utf-8') as cache_fp:
-            json.dump(cache, cache_fp, default=str)
-
-    def _read_cache(self, cache_name) -> dict[str, BaseModel]:
-        cache_file = self._cache_dir / f'todoist_{cache_name}.json'
-        if not cache_file.exists():
-            return {}
-
-        with cache_file.open('r', encoding='utf-8') as cache_fp:
-            cache = json.load(cache_fp)
-
-        model = CACHE_MAPPING.get(cache_name, None)
-        if not model:
-            return {}
-
-        entities: dict[str, BaseModel] = {key: model(**value) for key, value in cache['data'].items()}
-        return entities
-
-    def _write_sync_token(self):
-        with (self._cache_dir / 'todoist_sync_token.json').open('w', encoding='utf-8') as cache_fp:
-            json.dump({'sync_token': self._sync_token}, cache_fp)
-
-    def _read_sync_token(self) -> str:
-        cache_file = self._cache_dir / 'todoist_sync_token.json'
-        if not cache_file.exists():
-            return '*'
-
-        with cache_file.open('r', encoding='utf-8') as cache_fp:
-            return json.load(cache_fp).get('sync_token', '*')  # type: ignore
-
-    def _build_request_data(self, data: Any) -> dict:
-        result = {
-            'sync_token': self._sync_token,
-            **{key: json.dumps(value) for key, value in data.items()}
-        }
-
-        return result
-
-    def _post(self, data: dict, method_name: str) -> Any:
-        url = f'{BASE_URL}/{APIS[method_name]}'
-        dataset = self._build_request_data(data=data)
-        response = httpx.post(url=url, data=dataset, headers=self._headers)
-        response.raise_for_status()
-        result = response.json()
-
-        if 'sync_token' in result:
-            self._sync_token = result.pop('sync_token')
-        return result
-
-    def _command(self, data: Any, command_type: str) -> None:
-        temp_id = data.pop('temp_id', str(uuid.uuid4()))
-        command = Command(type=command_type, temp_id=temp_id, args=data)
-
-        self._commands[command.uuid] = command
+        for key in CACHE_MAPPING:
+            target = getattr(self, key)
+            target.read_cache()
 
     # PUBLIC METHODS
     def sync(self, full_sync: bool = False) -> bool:
@@ -142,25 +45,24 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             True if a full sync was performed, false otherwise
         """
-        method_name = inspect.stack()[0][3]
         if not full_sync:
-            self._sync_token = self._read_sync_token()
+            command_manager.read_sync_token()
 
         self._read_all_caches()
 
         data = {'resource_types': RESOURCE_TYPES}
-        result = self._post(data, method_name)
+        result = command_manager.post(data, 'sync', self.api_key)
 
         for key in CACHE_MAPPING:
-            target = getattr(self, key)  # type: ignore
+            target = getattr(self, key)
             model = CACHE_MAPPING[key]
             # Add new items
-            target.update({x['id']: CACHE_MAPPING[key](**x) for x in result[model.Config.todoist_resource_type]})
+            target.update({x['id']: model(**x) for x in result[model.Config.todoist_resource_type]})
             # Remove deleted items
-            setattr(self, key, self._remove_deleted(target, result[model.Config.todoist_resource_type], result['full_sync']))  # type: ignore
+            target.remove_deleted(result[model.Config.todoist_resource_type], result['full_sync'])
 
         self._write_all_caches()
-        self._write_sync_token()
+        command_manager.write_sync_token()
 
         self.synced = True
         return result['full_sync']  # type: ignore
@@ -184,7 +86,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
                 task_id = int(task_id)
 
             data = {'item_id': task_id}
-            result = self._post(data, method_name)
+            result = command_manager.post(data, method_name, self.api_key)
             task = Task(**result.get('item'))
             self.tasks.update({task.id: task})  # type: ignore
             return task
@@ -194,28 +96,14 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     def get_project(self, project_id: int | str) -> Project:
         """Get project by id
 
+        This is convenience wrapper for TodoistAPI.projects.get_by_id(project_id)
         Args:
             project_id: the id of the project
 
         Returns:
             A Project instance with all project details
         """
-        project = self.projects.get(str(project_id), None)
-        if project:
-            return project
-
-        try:
-            method_name = inspect.stack()[0][3]
-            if isinstance(project_id, str):
-                project_id = int(project_id)
-
-            data = {'project_id': project_id, 'all_data': False}
-            result = self._post(data, method_name)
-            project = Project(**result['project'])
-            self.projects.update({project.id: project})  # type: ignore
-            return project
-        except Exception as ex:
-            raise TodoistError(f'Project {project_id} not found') from ex
+        return self.projects.get_by_id(project_id=project_id)
 
     def get_project_by_pattern(self, pattern: str) -> Project:
         """Get a project if its name matches a regex pattern
@@ -228,15 +116,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        if not self.synced:
-            raise TodoistError('Run .sync() before you try to find a project based on a pattern')
-
-        compiled_pattern = re.compile(pattern=pattern)
-        for project in self.projects.values():
-            if compiled_pattern.findall(project.name):
-                return project
-
-        raise TodoistError(f'Project matching pattern {pattern} not found')
+        return self.projects.get_by_pattern(pattern=pattern, field='name')  # type: ignore
 
     def get_label(self, label_id: int | str) -> Label | None:
         """Get label by id
@@ -310,19 +190,14 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         raise TodoistError(f'Section matching {pattern} not found')
 
-    def get_stats(self) -> dict:
+    def get_stats(self) -> Any:
         """Get Todoist usage statistics
 
         Returns:
             A dict with all user stats
         """
         try:
-            method_name = inspect.stack()[0][3]
-            url = f'{BASE_URL}/{APIS[method_name]}'
-            with httpx.Client(headers=self._headers) as client:
-                response = client.get(url=url)
-                response.raise_for_status()
-                return response.json()  # type: ignore
+            return command_manager.get('completed/get_stats', self.api_key)
         except Exception as ex:
             raise TodoistError('User stats not available') from ex
 
@@ -332,10 +207,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Args:
             item: a TodoistBaseModel instance to add to Todoist
         """
-        self._temp_items[item.temp_id] = item  # type: ignore
+        command_manager.temp_items[item.temp_id] = item  # type: ignore
         model = type(item)
-        print(model.Config.command_add)
-        self._command(data=item.dict(exclude_none=True), command_type=model.Config.command_add)
+        command_manager.add_command(data=item.dict(exclude_none=True), command_type=model.Config.command_add)
 
     def add_task(self, task: Task) -> None:
         """Add new task to todoist.
@@ -368,7 +242,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         if isinstance(task_id, int):
             task_id = str(task_id)
 
-        self._command(data={'id': task_id}, command_type='item_complete')
+        command_manager.add_command(data={'id': task_id}, command_type='item_complete')
 
     def reopen_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Uncomplete a task
@@ -391,7 +265,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         if isinstance(task_id, int):
             task_id = str(task_id)
 
-        self._command(data={'id': task_id}, command_type='item_uncomplete')
+        command_manager.add_command(data={'id': task_id}, command_type='item_uncomplete')
 
     def add_project(self, project: Project) -> None:
         """Add new project to todoist.
@@ -425,18 +299,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
     def commit(self) -> Any:
         """Commit open commands to Todoist"""
-        method_name = inspect.stack()[0][3]
-        data = {'commands': [command.dict(exclude_none=True) for command in self._commands.values()]}
-        result = self._post(data, method_name)
-
-        for key, value in result['sync_status'].items():
-            if value == 'ok':
-                self._commands.pop(key)
-
-        for key, value in result['temp_id_mapping'].items():
-            item = self._temp_items[key]
-            item.id = value  # type: ignore
-            self._temp_items.pop(key)  # type: ignore
+        result = command_manager.commit(self.api_key)
 
         self.sync()
         return result
@@ -456,13 +319,13 @@ if __name__ == '__main__':
     # print(section)
     # project_ = todoist_.get_project_by_pattern('Private')
     # project_ = todoist_.get_project(project_id='2198523714')
-    task_to_add = Task(content="Buy Honey", project_id="2198523714", due=Due(string="today"))
-    todoist_.add(task_to_add)
-    todoist_.commit()
-    todoist_.close_task(task=task_to_add)
-    todoist_.commit()
-    todoist_.reopen_task(task=task_to_add)
-    todoist_.commit()
+    # task_to_add = Task(content="Buy Honey", project_id="2198523714", due=Due(string="today"))
+    # todoist_.add(task_to_add)
+    # todoist_.commit()
+    # todoist_.close_task(task=task_to_add)
+    # todoist_.commit()
+    # todoist_.reopen_task(task=task_to_add)
+    # todoist_.commit()
     # added_task_0 = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
     # added_task_1 = todoist_.add_task(content="Buy Milk", project_id="2198523714", due={'string': "today"})
     # completed_task_ = todoist_.close_task(task_id=6428239110)
