@@ -6,7 +6,7 @@ from synctodoist.models import Task, Due
 
 
 def test_add_task_no_due_date(synced_todoist, project_inbox):
-    task = Task(content="Buy Raspberries", project_id=project_inbox.id)
+    task = Task(content="test_add_task_no_due_date", project_id=project_inbox.id)
     assert task.temp_id
     synced_todoist.add_task(task)
     synced_todoist.commit()
@@ -15,7 +15,7 @@ def test_add_task_no_due_date(synced_todoist, project_inbox):
 
 
 def test_add_task_with_due_date(synced_todoist, project_inbox):
-    task = Task(content="Buy Honey", project_id=project_inbox.id, due=Due(string='today'))
+    task = Task(content="test_add_task_with_due_date", project_id=project_inbox.id, due=Due(string='today'))
     assert task.temp_id
     synced_todoist.add_task(task)
     synced_todoist.commit()
