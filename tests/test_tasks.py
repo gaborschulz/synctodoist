@@ -29,10 +29,9 @@ def test_get_task_str_id(synced_todoist, task_added):
     assert task.content
 
 
-def test_get_task_int_id(synced_todoist, task_added):
-    task = synced_todoist.get_task(task_id=int(task_added.id))
-    assert task.id == task_added.id
-    assert task.content
+def test_get_task_by_pattern(synced_todoist, task_added):
+    task = synced_todoist.get_task_by_pattern(pattern='fixture_task_added')
+    assert 'fixture_task_added' in task.content
 
 
 def test_close_task_nothing_provided(todoist):

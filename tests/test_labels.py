@@ -15,8 +15,8 @@ def test_get_label_str_id(synced_todoist, label_added):
 
 
 def test_get_label_by_pattern(synced_todoist, label_added):
-    label = synced_todoist.get_label_by_pattern(pattern='test')
-    assert 'test' in label.name
+    label = synced_todoist.get_label_by_pattern(pattern='fixture_label_added')
+    assert 'fixture_label_added' in label.name
 
 
 def test_get_label_unsynced(todoist, label_added):

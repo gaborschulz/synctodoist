@@ -15,7 +15,7 @@ def test_get_section_str_id(synced_todoist, section_added):
 
 
 def test_get_section_by_pattern(synced_todoist, section_added):
-    section = synced_todoist.get_section_by_pattern(pattern='test')
+    section = synced_todoist.get_section_by_pattern(pattern='fixture_section_added')
     assert section.name == section_added.name
 
 
