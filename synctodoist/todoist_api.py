@@ -273,6 +273,17 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         self.add(label)
 
+    def delete_label(self, label_id: int | str | None = None, *, label: Label | None = None) -> None:
+        """Delete a label
+
+        Args:
+            label_id: the id of the label to delete
+            label: the Label object to delete (keyword-only argument)
+
+        Either the label_id or the label must be provided. The label object takes priority over the label_id argument if both are provided
+        """
+        self.labels.delete(label_id=label_id, label=label)
+
     def add_reminder(self, reminder: Reminder) -> None:
         """Add new reminder to todoist.
 
@@ -291,7 +302,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         return result
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import os
     from dotenv import load_dotenv
 

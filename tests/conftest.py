@@ -1,6 +1,7 @@
 # pylint: disable-all
 import os
 from datetime import datetime
+from random import randint
 
 import pytest
 from dotenv import load_dotenv
@@ -32,16 +33,16 @@ def project_inbox(synced_todoist):
 
 @pytest.fixture
 def task_added(synced_todoist, project_inbox):
-    task_added = Task(content=f'Buy Raspberries ({datetime.now().isoformat()})', project_id=project_inbox.id, due=Due(string='today 18:00'))
-    synced_todoist.add_task(task_added)
+    task = Task(content=f'fixutre_task_added ({datetime.now().isoformat()})', project_id=project_inbox.id, due=Due(string='today 18:00'))
+    synced_todoist.add_task(task)
     synced_todoist.commit()
-    yield task_added
-    synced_todoist.delete_task(task=task_added)
+    yield task
+    synced_todoist.delete_task(task=task)
 
 
 @pytest.fixture
 def project_added(synced_todoist):
-    project = Project(name=f'test {int(datetime.now().timestamp())}')
+    project = Project(name=f'test_{int(datetime.now().timestamp())}_{randint(0, 10000)}')
     synced_todoist.add_project(project)
     synced_todoist.commit()
     yield project
@@ -50,7 +51,8 @@ def project_added(synced_todoist):
 
 @pytest.fixture
 def label_added(synced_todoist):
-    label = Label(name=f'test_{int(datetime.now().timestamp())}')
+    label = Label(name=f'test_{int(datetime.now().timestamp())}_{randint(0, 10000)}')
     synced_todoist.add_label(label)
     synced_todoist.commit()
     yield label
+    synced_todoist.delete_label(label=label)

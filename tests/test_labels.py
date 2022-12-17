@@ -14,6 +14,20 @@ def test_get_label_str_id(synced_todoist, label_added):
     assert label.name == label_added.name
 
 
-def get_label_unsynced(todoist, label_added):
+def test_get_label_unsynced(todoist, label_added):
     with pytest.raises(TodoistError):
         todoist.get_label(label_id=label_added.id)
+
+
+def test_delete_label_by_model(synced_todoist, label_added):
+    synced_todoist.delete_label(label=label_added)
+    synced_todoist.commit()
+    with pytest.raises(TodoistError):
+        synced_todoist.get_label(label_id=label_added.id)
+
+
+def test_delete_label_by_id(synced_todoist, label_added):
+    synced_todoist.delete_label(label_id=label_added.id)
+    synced_todoist.commit()
+    with pytest.raises(TodoistError):
+        synced_todoist.get_label(label_id=label_added.id)
