@@ -3,7 +3,7 @@ from typing import Any
 
 from synctodoist.exceptions import TodoistError
 from synctodoist.managers import ProjectManager, command_manager, TaskManager, LabelManager, SectionManager, ReminderManager
-from synctodoist.models import Task, Project, Label, Section, TodoistBaseModel, Due
+from synctodoist.models import Task, Project, Label, Section, TodoistBaseModel
 
 CACHE_MAPPING = {x.Config.cache_label: x for x in TodoistBaseModel.__subclasses__()}
 RESOURCE_TYPES = [x.Config.todoist_resource_type for x in TodoistBaseModel.__subclasses__()]
@@ -76,6 +76,20 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         return self.tasks.get_by_id(task_id=task_id)
 
+    def get_task_by_pattern(self, pattern: str, return_all: bool = False) -> Task | list[Task]:
+        """Get a project if its name matches a regex pattern
+
+        Args:
+            pattern: the regex pattern against which the project's name is matched
+            return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
+
+        Returns:
+            A Project instance containing the project details
+
+        IMPORTANT: You have to run the .sync() method first for this to work
+        """
+        return self.tasks.get_by_pattern(pattern=pattern, field='content', return_all=return_all)
+
     def get_project(self, project_id: int | str) -> Project:
         """Get project by id
 
@@ -100,7 +114,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.projects.get_by_pattern(pattern=pattern, field='name', return_all=return_all)  # type: ignore
+        return self.projects.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
 
     def get_label(self, label_id: int | str) -> Label | None:
         """Get label by id
@@ -125,7 +139,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.labels.get_by_pattern(pattern=pattern, field='name', return_all=return_all)  # type: ignore
+        return self.labels.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
 
     def get_section(self, section_id: int | str) -> Section | None:
         """Get section by id
@@ -136,7 +150,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A Section instance with all project details
         """
-        return self.sections.get_by_id(item_id=section_id)  # type: ignore
+        return self.sections.get_by_id(item_id=section_id)
 
     def get_section_by_pattern(self, pattern: str, return_all: bool = False) -> Section | list[Section]:
         """Get a section if its name matches a regex pattern
@@ -150,7 +164,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.sections.get_by_pattern(pattern=pattern, field='name', return_all=return_all)  # type: ignore
+        return self.sections.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
 
     def get_stats(self) -> Any:
         """Get Todoist usage statistics
@@ -194,19 +208,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
         """
-        if not task_id and not task:
-            raise TodoistError('Either task_id or task have to be provided')
-
-        if isinstance(task, Task):
-            if not task.id:
-                task_id = task.temp_id
-            else:
-                task_id = str(task.id)
-
-        if isinstance(task_id, int):
-            task_id = str(task_id)
-
-        command_manager.add_command(data={'id': task_id}, command_type='item_complete')
+        self.tasks.close(task_id=task_id, task=task)
 
     def reopen_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Uncomplete a task
@@ -217,19 +219,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
         """
-        if not task_id and not task:
-            raise TodoistError('Either task_id or task have to be provided')
-
-        if isinstance(task, Task):
-            if not task.id:
-                task_id = task.temp_id
-            else:
-                task_id = str(task.id)
-
-        if isinstance(task_id, int):
-            task_id = str(task_id)
-
-        command_manager.add_command(data={'id': task_id}, command_type='item_uncomplete')
+        self.tasks.reopen(task_id=task_id, task=task)
 
     def add_project(self, project: Project) -> None:
         """Add new project to todoist.
@@ -283,9 +273,9 @@ if __name__ == '__main__':
     # print(section)
     # project_ = todoist_.get_project_by_pattern('Private')
     # project_ = todoist_.get_project(project_id='2198523714')
-    task_to_add = Task(content="Buy Honey", project_id="2198523714", due=Due(string="today"))
-    todoist_.add(task_to_add)
-    todoist_.commit()
+    # task_to_add = Task(content="Buy Honey", project_id="2198523714", due=Due(string="today"))
+    # todoist_.add(task_to_add)
+    # todoist_.commit()
     # todoist_.close_task(task=task_to_add)
     # todoist_.commit()
     # todoist_.reopen_task(task=task_to_add)
