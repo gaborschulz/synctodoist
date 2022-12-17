@@ -78,3 +78,27 @@ class TaskManager(BaseManager[Task]):
             task_id = str(task_id)
 
         command_manager.add_command(data={'id': task_id}, command_type='item_uncomplete')
+
+    def delete(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
+        """Delete a task
+
+        Args:
+            task_id: the id of the task to delete
+            task: the Task object to delete (keyword-only argument)
+
+        Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
+        """
+
+        if not task_id and not task:
+            raise TodoistError('Either task_id or task have to be provided')
+
+        if isinstance(task, Task):
+            if not task.id:
+                task_id = task.temp_id
+            else:
+                task_id = str(task.id)
+
+        if isinstance(task_id, int):
+            task_id = str(task_id)
+
+        command_manager.add_command(data={'id': task_id}, command_type='item_delete')

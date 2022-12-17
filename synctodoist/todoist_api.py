@@ -221,6 +221,17 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         self.tasks.reopen(task_id=task_id, task=task)
 
+    def delete_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
+        """Delete a task
+
+        Args:
+            task_id: the id of the task to delete
+            task: the Task object to delete (keyword-only argument)
+
+        Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
+        """
+        self.tasks.delete(task_id=task_id, task=task)
+
     def add_project(self, project: Project) -> None:
         """Add new project to todoist.
 

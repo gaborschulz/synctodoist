@@ -137,6 +137,20 @@ def test_close_task_uncommitted(synced_todoist, project_inbox):
     assert task.checked
 
 
+def test_delete_task_by_model(synced_todoist, task_added):
+    synced_todoist.delete_task(task_id=task_added.id)
+    synced_todoist.commit()
+    with pytest.raises(TodoistError):
+        synced_todoist.get_task(task_id=task_added.id)
+
+
+def test_delete_task_by_id(synced_todoist, task_added):
+    synced_todoist.delete_task(task=task_added)
+    synced_todoist.commit()
+    with pytest.raises(TodoistError):
+        synced_todoist.get_task(task_id=task_added.id)
+
+
 def test_add_reminder(synced_todoist, task_added):
     reminder = Reminder(item_id=task_added.id, type='relative', mm_offset=30)
     synced_todoist.add_reminder(reminder)
