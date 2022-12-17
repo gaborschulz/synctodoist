@@ -1,12 +1,13 @@
 # pylint: disable-all
 import os
+from datetime import datetime
 
 import pytest
 from dotenv import load_dotenv
 
 from synctodoist import TodoistAPI
 from synctodoist.exceptions import TodoistError
-from synctodoist.models import Task, Due
+from synctodoist.models import Task, Due, Reminder
 
 load_dotenv()
 API_KEY = os.environ.get('TODOIST_API')
@@ -32,7 +33,7 @@ def project_inbox(synced_todoist):
 
 @pytest.fixture
 def task_added(synced_todoist, project_inbox):
-    task_added = Task(content="Buy Raspberries", project_id=project_inbox.id)
+    task_added = Task(content=f'Buy Raspberries ({datetime.now().isoformat()})', project_id=project_inbox.id, due=Due(string='today 18:00'))
     synced_todoist.add_task(task_added)
     synced_todoist.commit()
     return task_added
@@ -67,7 +68,7 @@ def test_get_project_by_pattern_synced_existing(synced_todoist, project_inbox):
     assert project_inbox.name == 'Inbox'
 
 
-def test_get_project_by_pattern_synced_notexisting(synced_todoist):
+def test_get_project_by_pattern_synced_non_existing(synced_todoist):
     with pytest.raises(TodoistError):
         synced_todoist.get_project_by_pattern(pattern='NON_EXISTING_PROJECT')
 
@@ -134,3 +135,10 @@ def test_close_task_uncommitted(synced_todoist, project_inbox):
     synced_todoist.commit()
     task = synced_todoist.get_task(task_id=task.id)
     assert task.checked
+
+
+def test_add_reminder(synced_todoist, task_added):
+    reminder = Reminder(item_id=task_added.id, type='relative', mm_offset=30)
+    synced_todoist.add_reminder(reminder)
+    synced_todoist.commit()
+    assert reminder.id

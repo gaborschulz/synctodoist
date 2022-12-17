@@ -112,7 +112,9 @@ class BaseManager(Generic[DataT]):
 
     def add(self, item: DataT):
         """Add new item to command_manager queue"""
-        command_manager.add_command(data=item.dict(exclude_none=True), command_type=self.model.Config.command_add, item=item)  # type: ignore
+        command_manager.add_command(data=item.dict(exclude_none=True, exclude_defaults=True),  # type: ignore
+                                    command_type=self.model.Config.command_add,  # type: ignore
+                                    item=item)  # type: ignore
 
     def read_cache(self):
         """Read cached data"""

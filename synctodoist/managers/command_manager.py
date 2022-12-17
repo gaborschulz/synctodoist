@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 
+from synctodoist.exceptions import TodoistError
 from synctodoist.models import Command, TodoistBaseModel
 
 BASE_URL = 'https://api.todoist.com/sync/v9'
@@ -76,10 +77,14 @@ def get(endpoint: str, api_key: str) -> Any:
 def commit(api_key: str) -> Any:
     """Commit open commands to Todoist"""
     endpoint = 'sync'
-    data = {'commands': [command.dict(exclude_none=True) for command in commands.values()]}
+    data = {'commands': [command.dict(exclude_none=True, exclude_defaults=True) for command in commands.values()]}
     result = post(data, endpoint, api_key)
 
+    errors = []
     for key, value in result['sync_status'].items():
+        if 'error' in value:
+            errors.append({key: value})
+            raise TodoistError(f'Sync Error: {errors}')
         if value == 'ok':
             commands.pop(key)
 

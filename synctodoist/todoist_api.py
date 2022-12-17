@@ -3,7 +3,7 @@ from typing import Any
 
 from synctodoist.exceptions import TodoistError
 from synctodoist.managers import ProjectManager, command_manager, TaskManager, LabelManager, SectionManager, ReminderManager
-from synctodoist.models import Task, Project, Label, Section, TodoistBaseModel
+from synctodoist.models import Task, Project, Label, Section, TodoistBaseModel, Reminder
 
 CACHE_MAPPING = {x.Config.cache_label: x for x in TodoistBaseModel.__subclasses__()}
 RESOURCE_TYPES = [x.Config.todoist_resource_type for x in TodoistBaseModel.__subclasses__()]
@@ -250,6 +250,16 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             label: a Label instance to add to Todoist
         """
         self.add(label)
+
+    def add_reminder(self, reminder: Reminder) -> None:
+        """Add new reminder to todoist.
+
+        This is a convenience method for TodoistAPI.add(item=reminder).
+
+        Args:
+            reminder: a Reminder instance to add to Todoist
+        """
+        self.add(reminder)
 
     def commit(self) -> Any:
         """Commit open commands to Todoist"""

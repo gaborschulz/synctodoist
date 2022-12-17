@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from .due import Due
 from .todoist_base_model import TodoistBaseModel
 
@@ -8,7 +10,7 @@ class Reminder(TodoistBaseModel):
     item_id: str | int | None
     type: str
     due: Due | None
-    mm_offset: int | None
+    minute_offset: int | None = Field(alias='mm_offset')
     name: str | None
     loc_lat: str | None
     loc_long: str | None
@@ -17,6 +19,7 @@ class Reminder(TodoistBaseModel):
 
     class Config:
         """Config for Reminder model"""
+        allow_population_by_field_name = True
         cache_label: str = 'reminders'
         todoist_name: str = 'reminder'
         todoist_resource_type: str = 'reminders'
