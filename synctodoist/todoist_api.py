@@ -1,4 +1,3 @@
-import inspect
 from pathlib import Path
 from typing import Any
 
@@ -75,22 +74,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A Task instance with all task details
         """
-        task = self.tasks.get(str(task_id), None)
-        if task:
-            return task
-
-        try:
-            method_name = inspect.stack()[0][3]
-            if isinstance(task_id, str) and task_id.isdigit():
-                task_id = int(task_id)
-
-            data = {'item_id': task_id}
-            result = command_manager.post(data, method_name, self.api_key)
-            task = Task(**result.get('item'))
-            self.tasks.update({task.id: task})  # type: ignore
-            return task
-        except Exception as ex:
-            raise TodoistError(f'Task {task_id} not found') from ex
+        return self.tasks.get_by_id(task_id=task_id)
 
     def get_project(self, project_id: int | str) -> Project:
         """Get project by id
@@ -104,18 +88,19 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         return self.projects.get_by_id(project_id=project_id)
 
-    def get_project_by_pattern(self, pattern: str) -> Project:
+    def get_project_by_pattern(self, pattern: str, return_all: bool = False) -> Project | list[Project]:
         """Get a project if its name matches a regex pattern
 
         Args:
             pattern: the regex pattern against which the project's name is matched
+            return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
 
         Returns:
             A Project instance containing the project details
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.projects.get_by_pattern(pattern=pattern, field='name')  # type: ignore
+        return self.projects.get_by_pattern(pattern=pattern, field='name', return_all=return_all)  # type: ignore
 
     def get_label(self, label_id: int | str) -> Label | None:
         """Get label by id
@@ -128,18 +113,19 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         return self.labels.get_by_id(item_id=label_id)  # type: ignore
 
-    def get_label_by_pattern(self, pattern: str) -> Label:
+    def get_label_by_pattern(self, pattern: str, return_all: bool = False) -> Label | list[Label]:
         """Get a label if its name matches a regex pattern
 
         Args:
             pattern: the regex pattern against which the label's name is matched
+            return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
 
         Returns:
             A Label instance containing the project details
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.labels.get_by_pattern(pattern=pattern, field='name')  # type: ignore
+        return self.labels.get_by_pattern(pattern=pattern, field='name', return_all=return_all)  # type: ignore
 
     def get_section(self, section_id: int | str) -> Section | None:
         """Get section by id
@@ -152,18 +138,19 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         return self.sections.get_by_id(item_id=section_id)  # type: ignore
 
-    def get_section_by_pattern(self, pattern: str) -> Section:
+    def get_section_by_pattern(self, pattern: str, return_all: bool = False) -> Section | list[Section]:
         """Get a section if its name matches a regex pattern
 
         Args:
             pattern: the regex pattern against which the section's name is matched
+            return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
 
         Returns:
             A Section instance containing the project details
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.sections.get_by_pattern(pattern=pattern, field='name')  # type: ignore
+        return self.sections.get_by_pattern(pattern=pattern, field='name', return_all=return_all)  # type: ignore
 
     def get_stats(self) -> Any:
         """Get Todoist usage statistics

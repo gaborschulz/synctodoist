@@ -31,3 +31,4 @@ class Task(TodoistBaseModel):
         todoist_name: str = 'item'
         todoist_resource_type: str = 'items'
         command_add: str = 'item_add'
+        api_get: str = 'items/get'

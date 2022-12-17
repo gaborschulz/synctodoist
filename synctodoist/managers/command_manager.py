@@ -9,10 +9,6 @@ import httpx
 from synctodoist.models import Command, TodoistBaseModel
 
 BASE_URL = 'https://api.todoist.com/sync/v9'
-APIS = {
-    'get_task': 'items/get',
-    'get_project': 'projects/get',
-}
 
 _headers = {
     'Content-Type': 'application/x-www-form-urlencoded'
@@ -107,6 +103,7 @@ def read_sync_token():
     cache_file = cache_dir / 'todoist_sync_token.json'
     if not cache_file.exists():
         SYNC_TOKEN = '*'  # nosec
+        return
 
     with cache_file.open('r', encoding='utf-8') as cache_fp:
         SYNC_TOKEN = json.load(cache_fp).get('sync_token', '*')  # type: ignore

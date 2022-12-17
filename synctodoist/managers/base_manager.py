@@ -4,20 +4,21 @@ import json
 import re
 import tempfile
 from pathlib import Path
-from typing import Iterable, Any, Mapping, Type, TYPE_CHECKING
+from typing import Iterable, Any, TYPE_CHECKING, TypeVar, Generic, Type
 
 from synctodoist.exceptions import TodoistError
 from synctodoist.managers import command_manager
-from synctodoist.models import Project, TodoistBaseModel
 
 if TYPE_CHECKING:
     from synctodoist.todoist_api import TodoistAPI
 
+DataT = TypeVar('DataT')
 
-class BaseManager:
+
+class BaseManager(Generic[DataT]):
     """Base manager"""
-    _items: Mapping[str, TodoistBaseModel] = {}
-    model: Type[TodoistBaseModel]
+    _items: dict[str, DataT] = {}
+    model: Type[DataT]
 
     def __init__(self, api: TodoistAPI, cache_dir: Path | str | None = None):
         self._api: TodoistAPI = api
@@ -27,15 +28,15 @@ class BaseManager:
         self._cache_dir = cache_dir if isinstance(cache_dir, Path) else Path(cache_dir)
 
     # Pass-through to dict
-    def get(self, __key: str, default: Any) -> TodoistBaseModel | None:
+    def get(self, __key: str, default: Any) -> DataT | None:
         """Get item by key"""
         return self._items.get(__key, default)
 
-    def update(self, _m: dict[str, Project], **kwargs) -> None:
+    def update(self, _m: dict[str, DataT], **kwargs) -> None:
         """Update projects"""
         return self._items.update(_m, **kwargs)  # type: ignore
 
-    def values(self) -> Iterable[TodoistBaseModel]:
+    def values(self) -> Iterable[DataT]:
         """Get values"""
         return self._items.values()
 
@@ -47,7 +48,7 @@ class BaseManager:
         return len(self._items)
 
     # Custom methods
-    def get_by_id(self, item_id: int | str) -> TodoistBaseModel:
+    def get_by_id(self, item_id: int | str) -> DataT | None:
         """Get item by id
 
         Args:
@@ -59,35 +60,46 @@ class BaseManager:
         if item := self.get(str(item_id), None):
             return item  # type: ignore
 
-        if not hasattr(self.model.Config, 'api_get'):
+        if not hasattr(self.model.Config, 'api_get'):  # type: ignore
             raise TodoistError(f'{self.model} does not support the get method without syncing. Please, sync your API first.')
 
-    def get_by_pattern(self, pattern: str, field: str = 'name') -> TodoistBaseModel:
+        return None
+
+    def get_by_pattern(self, pattern: str, field: str = 'name', return_all: bool = False) -> DataT | list[DataT]:
         """Get an item if its field matches a regex pattern
 
         Args:
             pattern: the regex pattern against which the project's name is matched
             field: the field in which the pattern should be searched for (default: name)
+            return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
 
         Returns:
-            A TodoistBaseModel instance containing the project details
+            A TodoistBaseModel instance containing the project details or a list of TodoistBaseModel instances. Raises a TodoistError if return_all is set
+            to False and no matching item is found.
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
         if not self._api.synced:
             raise TodoistError('Run .sync() before you try to find a project based on a pattern')
 
+        items: list[DataT] = []
         compiled_pattern = re.compile(pattern=pattern)
         for item in self._items.values():
             if compiled_pattern.findall(getattr(item, field)):
-                return item
+                if not return_all:
+                    return item
 
-        raise TodoistError(f'Project matching pattern {pattern} not found')
+                items.append(item)
+
+        if not return_all:
+            raise TodoistError(f'Project matching pattern {pattern} not found')
+
+        return items
 
     def remove_deleted(self, received: list[Any], full_sync: bool = False):
         """Remove deleted items"""
         received_keys = {x['id'] for x in received}
-        result: dict[str, TodoistBaseModel] = {}
+        result: dict[str, DataT] = {}
 
         if full_sync:
             for key, value in self._items.items():
@@ -98,8 +110,9 @@ class BaseManager:
 
         self._items = result
 
-    def add(self, item: TodoistBaseModel):
-        command_manager.add_command(data=item.dict(exclude_none=True), command_type=self.model.Config.command_add, item=item)
+    def add(self, item: DataT):
+        """Add new item to command_manager queue"""
+        command_manager.add_command(data=item.dict(exclude_none=True), command_type=self.model.Config.command_add, item=item)  # type: ignore
 
     def read_cache(self):
         """Read cached data"""

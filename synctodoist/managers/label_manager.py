@@ -2,6 +2,6 @@ from synctodoist.managers.base_manager import BaseManager
 from synctodoist.models import Label
 
 
-class LabelManager(BaseManager):
+class LabelManager(BaseManager[Label]):
     """Project manager"""
     model = Label

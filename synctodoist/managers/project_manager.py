@@ -4,11 +4,11 @@ from synctodoist.managers.base_manager import BaseManager
 from synctodoist.models import Project
 
 
-class ProjectManager(BaseManager):
+class ProjectManager(BaseManager[Project]):
     """Project manager model"""
     model = Project
 
-    def get_by_id(self, project_id: int | str) -> Project:
+    def get_by_id(self, project_id: int | str) -> Project:  # pylint: disable=arguments-renamed
         """Get project by id
 
         Args:
@@ -18,17 +18,17 @@ class ProjectManager(BaseManager):
             A Project instance with all project details
         """
         if project := super().get_by_id(item_id=project_id):
-            return project  # type: ignore
+            return project
 
         try:
             endpoint = self.model.Config.api_get
-            if isinstance(project_id, str):
+            if isinstance(project_id, str) and project_id.isdigit():
                 project_id = int(project_id)
 
             data = {'project_id': project_id, 'all_data': False}
             result = command_manager.post(data, endpoint, self._api.api_key)
             project = Project(**result['project'])
-            self._items.update({project.id: project})  # type: ignore
+            self._items.update({str(project.id): project})
             return project
         except Exception as ex:
             raise TodoistError(f'Project {project_id} not found') from ex
