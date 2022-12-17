@@ -24,7 +24,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         if cache_dir:
             command_manager.cache_dir = cache_dir if isinstance(cache_dir, Path) else Path(cache_dir)
 
-    # PRIVATE METHODS
+    # region PRIVATE METHODS
 
     def _write_all_caches(self):
         for key in CACHE_MAPPING:
@@ -36,7 +36,29 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             target = getattr(self, key)
             target.read_cache()
 
-    # PUBLIC METHODS
+    # endregion
+
+    # region PUBLIC METHODS
+    # region Global methods
+    def add(self, item: TodoistBaseModel) -> None:
+        """Add new task to todoist
+
+        Args:
+            item: a TodoistBaseModel instance to add to Todoist
+        """
+        # type: ignore
+        model = type(item)
+        key = model.Config.cache_label
+        model_manager = getattr(self, key)
+        model_manager.add(item=item)
+
+    def commit(self) -> Any:
+        """Commit open commands to Todoist"""
+        result = command_manager.commit(self.api_key)
+
+        self.sync()
+        return result
+
     def sync(self, full_sync: bool = False) -> bool:
         """Synchronize with Todoist API
 
@@ -65,30 +87,78 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         self.synced = True
         return result['full_sync']  # type: ignore
 
-    def get_task(self, task_id: int | str) -> Task:
-        """Get task by id
+    # endregion
+
+    # region Label methods
+    def add_label(self, label: Label) -> None:
+        """Add new label to todoist.
+
+        This is a convenience method for TodoistAPI.add(item=label).
 
         Args:
-            task_id: the id of the task
+            label: a Label instance to add to Todoist
+        """
+        self.add(label)
+
+    def delete_label(self, label_id: int | str | None = None, *, label: Label | None = None) -> None:
+        """Delete a label
+
+        Args:
+            label_id: the id of the label to delete
+            label: the Label object to delete (keyword-only argument)
+
+        Either the label_id or the label must be provided. The label object takes priority over the label_id argument if both are provided
+        """
+        self.labels.delete(label_id=label_id, label=label)
+
+    def get_label(self, label_id: int | str) -> Label | None:
+        """Get label by id
+
+        Args:
+            label_id: the id of the label
 
         Returns:
-            A Task instance with all task details
+            A Label instance with all project details
         """
-        return self.tasks.get_by_id(task_id=task_id)
+        return self.labels.get_by_id(item_id=label_id)  # type: ignore
 
-    def get_task_by_pattern(self, pattern: str, return_all: bool = False) -> Task | list[Task]:
-        """Get a project if its name matches a regex pattern
+    def get_label_by_pattern(self, pattern: str, return_all: bool = False) -> Label | list[Label]:
+        """Get a label if its name matches a regex pattern
 
         Args:
-            pattern: the regex pattern against which the project's name is matched
+            pattern: the regex pattern against which the label's name is matched
             return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
 
         Returns:
-            A Project instance containing the project details
+            A Label instance containing the project details
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.tasks.get_by_pattern(pattern=pattern, field='content', return_all=return_all)
+        return self.labels.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
+
+    # endregion
+
+    # region Project methods
+    def add_project(self, project: Project) -> None:
+        """Add new project to todoist.
+
+        This is a convenience method for TodoistAPI.add(item=project).
+
+        Args:
+            project: a Project instance to add to Todoist
+        """
+        self.add(project)
+
+    def delete_project(self, project_id: int | str | None = None, *, project: Project | None = None) -> None:
+        """Delete a project
+
+        Args:
+            project_id: the id of the project to delete
+            project: the Project object to delete (keyword-only argument)
+
+        Either the project_id or the project must be provided. The project object takes priority over the project_id argument if both are provided
+        """
+        self.projects.delete(project_id=project_id, project=project)
 
     def get_project(self, project_id: int | str) -> Project:
         """Get project by id
@@ -116,30 +186,64 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         return self.projects.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
 
-    def get_label(self, label_id: int | str) -> Label | None:
-        """Get label by id
+    # endregion
+
+    # region Reminder methods
+    def add_reminder(self, reminder: Reminder) -> None:
+        """Add new reminder to todoist.
+
+        This is a convenience method for TodoistAPI.add(item=reminder).
 
         Args:
-            label_id: the id of the label
-
-        Returns:
-            A Label instance with all project details
+            reminder: a Reminder instance to add to Todoist
         """
-        return self.labels.get_by_id(item_id=label_id)  # type: ignore
+        self.add(reminder)
 
-    def get_label_by_pattern(self, pattern: str, return_all: bool = False) -> Label | list[Label]:
-        """Get a label if its name matches a regex pattern
+    def delete_reminder(self, reminder_id: int | str | None = None, *, reminder: Reminder | None = None) -> None:
+        """Delete a reminder
 
         Args:
-            pattern: the regex pattern against which the label's name is matched
-            return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
+            reminder_id: the id of the reminder to delete
+            reminder: the Reminder object to delete (keyword-only argument)
+
+        Either the reminder_id or the reminder must be provided. The reminder object takes priority over the reminder_id argument if both are provided
+        """
+        self.reminders.delete(reminder_id=reminder_id, reminder=reminder)
+
+    def get_reminder(self, reminder_id: int | str) -> Reminder | None:
+        """Get reminder by id
+
+        Args:
+            reminder_id: the id of the reminder
 
         Returns:
-            A Label instance containing the project details
-
-        IMPORTANT: You have to run the .sync() method first for this to work
+            A Reminder instance with all project details
         """
-        return self.labels.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
+        return self.reminders.get_by_id(item_id=reminder_id)  # type: ignore
+
+    # endregion
+
+    # region Section methods
+    def add_section(self, section: Section) -> None:
+        """Add new section to todoist.
+
+        This is a convenience method for TodoistAPI.add(item=section).
+
+        Args:
+            section: a Section instance to add to Todoist
+        """
+        self.add(section)
+
+    def delete_section(self, section_id: int | str | None = None, *, section: Section | None = None) -> None:
+        """Delete a section
+
+        Args:
+            section_id: the id of the section to delete
+            section: the Section object to delete (keyword-only argument)
+
+        Either the section_id or the section must be provided. The section object takes priority over the section_id argument if both are provided
+        """
+        self.sections.delete(section_id=section_id, section=section)
 
     def get_section(self, section_id: int | str) -> Section | None:
         """Get section by id
@@ -166,29 +270,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         return self.sections.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
 
-    def get_stats(self) -> Any:
-        """Get Todoist usage statistics
+    # endregion
 
-        Returns:
-            A dict with all user stats
-        """
-        try:
-            return command_manager.get('completed/get_stats', self.api_key)
-        except Exception as ex:
-            raise TodoistError('User stats not available') from ex
-
-    def add(self, item: TodoistBaseModel) -> None:
-        """Add new task to todoist
-
-        Args:
-            item: a TodoistBaseModel instance to add to Todoist
-        """
-        # type: ignore
-        model = type(item)
-        key = model.Config.cache_label
-        model_manager = getattr(self, key)
-        model_manager.add(item=item)
-
+    # region Task methods
     def add_task(self, task: Task) -> None:
         """Add new task to todoist.
 
@@ -210,17 +294,6 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         self.tasks.close(task_id=task_id, task=task)
 
-    def reopen_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
-        """Uncomplete a task
-
-        Args:
-            task_id: the id of the task to reopen
-            task: the Task object to reopen (keyword-only argument)
-
-        Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
-        """
-        self.tasks.reopen(task_id=task_id, task=task)
-
     def delete_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Delete a task
 
@@ -232,85 +305,57 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         self.tasks.delete(task_id=task_id, task=task)
 
-    def add_project(self, project: Project) -> None:
-        """Add new project to todoist.
-
-        This is a convenience method for TodoistAPI.add(item=project).
+    def get_task(self, task_id: int | str) -> Task:
+        """Get task by id
 
         Args:
-            project: a Project instance to add to Todoist
-        """
-        self.add(project)
+            task_id: the id of the task
 
-    def delete_project(self, project_id: int | str | None = None, *, project: Project | None = None) -> None:
-        """Delete a project
+        Returns:
+            A Task instance with all task details
+        """
+        return self.tasks.get_by_id(task_id=task_id)
+
+    def get_task_by_pattern(self, pattern: str, return_all: bool = False) -> Task | list[Task]:
+        """Get a project if its name matches a regex pattern
 
         Args:
-            project_id: the id of the project to delete
-            project: the Project object to delete (keyword-only argument)
+            pattern: the regex pattern against which the project's name is matched
+            return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
 
-        Either the project_id or the project must be provided. The project object takes priority over the project_id argument if both are provided
+        Returns:
+            A Project instance containing the project details
+
+        IMPORTANT: You have to run the .sync() method first for this to work
         """
-        self.projects.delete(project_id=project_id, project=project)
+        return self.tasks.get_by_pattern(pattern=pattern, field='content', return_all=return_all)
 
-    def add_section(self, section: Section) -> None:
-        """Add new section to todoist.
-
-        This is a convenience method for TodoistAPI.add(item=section).
+    def reopen_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
+        """Uncomplete a task
 
         Args:
-            section: a Section instance to add to Todoist
+            task_id: the id of the task to reopen
+            task: the Task object to reopen (keyword-only argument)
+
+        Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
         """
-        self.add(section)
+        self.tasks.reopen(task_id=task_id, task=task)
 
-    def delete_section(self, section_id: int | str | None = None, *, section: Section | None = None) -> None:
-        """Delete a section
+    # endregion
 
-        Args:
-            section_id: the id of the section to delete
-            section: the Section object to delete (keyword-only argument)
+    # region User methods
+    def get_stats(self) -> Any:
+        """Get Todoist usage statistics
 
-        Either the section_id or the section must be provided. The section object takes priority over the section_id argument if both are provided
+        Returns:
+            A dict with all user stats
         """
-        self.sections.delete(section_id=section_id, section=section)
-
-    def add_label(self, label: Label) -> None:
-        """Add new label to todoist.
-
-        This is a convenience method for TodoistAPI.add(item=label).
-
-        Args:
-            label: a Label instance to add to Todoist
-        """
-        self.add(label)
-
-    def delete_label(self, label_id: int | str | None = None, *, label: Label | None = None) -> None:
-        """Delete a label
-
-        Args:
-            label_id: the id of the label to delete
-            label: the Label object to delete (keyword-only argument)
-
-        Either the label_id or the label must be provided. The label object takes priority over the label_id argument if both are provided
-        """
-        self.labels.delete(label_id=label_id, label=label)
-
-    def add_reminder(self, reminder: Reminder) -> None:
-        """Add new reminder to todoist.
-
-        This is a convenience method for TodoistAPI.add(item=reminder).
-
-        Args:
-            reminder: a Reminder instance to add to Todoist
-        """
-        self.add(reminder)
-
-    def commit(self) -> Any:
-        """Commit open commands to Todoist"""
-        result = command_manager.commit(self.api_key)
-
-        self.sync()
-        return result
+        try:
+            return command_manager.get('completed/get_stats', self.api_key)
+        except Exception as ex:
+            raise TodoistError('User stats not available') from ex
+    # endregion
+    # endregion
 
 
 if __name__ == '__main__':  # pragma: no cover

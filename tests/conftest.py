@@ -7,7 +7,7 @@ import pytest
 from dotenv import load_dotenv
 
 from synctodoist import TodoistAPI
-from synctodoist.models import Task, Due, Project, Label, Section
+from synctodoist.models import Task, Due, Project, Label, Section, Reminder
 
 load_dotenv()
 API_KEY = os.environ.get('TODOIST_API')
@@ -69,3 +69,11 @@ def section_added(synced_todoist, project_added):
     yield section
     synced_todoist.delete_section(section=section)
     synced_todoist.commit()
+
+
+@pytest.fixture
+def reminder_added(synced_todoist, task_added):
+    reminder = Reminder(item_id=task_added.id, type='relative', mm_offset=30)
+    synced_todoist.add_reminder(reminder)
+    synced_todoist.commit()
+    yield reminder
