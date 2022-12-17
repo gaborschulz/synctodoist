@@ -4,4 +4,4 @@ from synctodoist.models import Task
 
 class TaskManager(BaseManager):
     """Task manager"""
-    _model = Task
+    model = Task

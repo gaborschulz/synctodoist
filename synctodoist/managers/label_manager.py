@@ -4,4 +4,4 @@ from synctodoist.models import Label
 
 class LabelManager(BaseManager):
     """Project manager"""
-    _model = Label
+    model = Label

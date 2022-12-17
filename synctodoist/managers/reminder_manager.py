@@ -4,4 +4,4 @@ from synctodoist.models import Reminder
 
 class ReminderManager(BaseManager):
     """Reminder manager"""
-    _model = Reminder
+    model = Reminder

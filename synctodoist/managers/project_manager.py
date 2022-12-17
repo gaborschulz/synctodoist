@@ -6,7 +6,7 @@ from synctodoist.models import Project
 
 class ProjectManager(BaseManager):
     """Project manager model"""
-    _model = Project
+    model = Project
 
     def get_by_id(self, project_id: int | str) -> Project:
         """Get project by id
@@ -17,14 +17,11 @@ class ProjectManager(BaseManager):
         Returns:
             A Project instance with all project details
         """
-        if project := self.get(str(project_id), None):
+        if project := super().get_by_id(item_id=project_id):
             return project  # type: ignore
 
-        if not hasattr(self._model.Config, 'api_get'):
-            raise TodoistError(f'{self._model} does not support the get method without syncing. Please, sync your API first.')
-
         try:
-            endpoint = self._model.Config.api_get
+            endpoint = self.model.Config.api_get
             if isinstance(project_id, str):
                 project_id = int(project_id)
 

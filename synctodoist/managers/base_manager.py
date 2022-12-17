@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Iterable, Any, Mapping, Type, TYPE_CHECKING
 
 from synctodoist.exceptions import TodoistError
+from synctodoist.managers import command_manager
 from synctodoist.models import Project, TodoistBaseModel
 
 if TYPE_CHECKING:
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 class BaseManager:
     """Base manager"""
     _items: Mapping[str, TodoistBaseModel] = {}
-    _model: Type[TodoistBaseModel]
+    model: Type[TodoistBaseModel]
 
     def __init__(self, api: TodoistAPI, cache_dir: Path | str | None = None):
         self._api: TodoistAPI = api
@@ -25,6 +26,7 @@ class BaseManager:
 
         self._cache_dir = cache_dir if isinstance(cache_dir, Path) else Path(cache_dir)
 
+    # Pass-through to dict
     def get(self, __key: str, default: Any) -> TodoistBaseModel | None:
         """Get item by key"""
         return self._items.get(__key, default)
@@ -43,6 +45,22 @@ class BaseManager:
 
     def __len__(self):
         return len(self._items)
+
+    # Custom methods
+    def get_by_id(self, item_id: int | str) -> TodoistBaseModel:
+        """Get item by id
+
+        Args:
+            item_id: the id of the item
+
+        Returns:
+            A TodoistBaseModel instance with all item details
+        """
+        if item := self.get(str(item_id), None):
+            return item  # type: ignore
+
+        if not hasattr(self.model.Config, 'api_get'):
+            raise TodoistError(f'{self.model} does not support the get method without syncing. Please, sync your API first.')
 
     def get_by_pattern(self, pattern: str, field: str = 'name') -> TodoistBaseModel:
         """Get an item if its field matches a regex pattern
@@ -80,22 +98,25 @@ class BaseManager:
 
         self._items = result
 
+    def add(self, item: TodoistBaseModel):
+        command_manager.add_command(data=item.dict(exclude_none=True), command_type=self.model.Config.command_add, item=item)
+
     def read_cache(self):
         """Read cached data"""
-        cache_file = self._cache_dir / f'todoist_{self._model.Config.cache_label}.json'
+        cache_file = self._cache_dir / f'todoist_{self.model.Config.cache_label}.json'
         if not cache_file.exists():
             return
 
         with cache_file.open('r', encoding='utf-8') as cache_fp:
             cache = json.load(cache_fp)
 
-        self._items = {key: self._model(**value) for key, value in cache['data'].items()}
+        self._items = {key: self.model(**value) for key, value in cache['data'].items()}
 
     def write_cache(self):
         """Write data to cache"""
-        cache_file = self._cache_dir / f'todoist_{self._model.Config.cache_label}.json'
+        cache_file = self._cache_dir / f'todoist_{self.model.Config.cache_label}.json'
         cache = {
-            'name': self._model.Config.cache_label,
+            'name': self.model.Config.cache_label,
             'data': {key: value.dict(exclude_none=True) for key, value in self._items.items()}
         }
 

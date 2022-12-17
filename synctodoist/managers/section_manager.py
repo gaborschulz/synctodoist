@@ -4,4 +4,4 @@ from synctodoist.models import Section
 
 class SectionManager(BaseManager):
     """Section manager"""
-    _model = Section
+    model = Section

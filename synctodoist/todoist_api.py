@@ -1,11 +1,10 @@
 import inspect
-import re
 from pathlib import Path
 from typing import Any
 
 from synctodoist.exceptions import TodoistError
 from synctodoist.managers import ProjectManager, command_manager, TaskManager, LabelManager, SectionManager, ReminderManager
-from synctodoist.models import Task, Project, Label, Section, TodoistBaseModel
+from synctodoist.models import Task, Project, Label, Section, TodoistBaseModel, Due
 
 CACHE_MAPPING = {x.Config.cache_label: x for x in TodoistBaseModel.__subclasses__()}
 RESOURCE_TYPES = [x.Config.todoist_resource_type for x in TodoistBaseModel.__subclasses__()]
@@ -127,11 +126,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A Label instance with all project details
         """
-        label = self.labels.get(str(label_id), None)
-        if label:
-            return label
-
-        raise TodoistError(f'Label {label_id} not found')
+        return self.labels.get_by_id(item_id=label_id)  # type: ignore
 
     def get_label_by_pattern(self, pattern: str) -> Label:
         """Get a label if its name matches a regex pattern
@@ -144,15 +139,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        if not self.synced:
-            raise TodoistError('Run .sync() before you try to find a label based on a pattern')
-
-        compiled_pattern = re.compile(pattern=pattern)
-        for label in self.labels.values():
-            if compiled_pattern.findall(label.name):
-                return label
-
-        raise TodoistError(f'Label matching {pattern} not found')
+        return self.labels.get_by_pattern(pattern=pattern, field='name')  # type: ignore
 
     def get_section(self, section_id: int | str) -> Section | None:
         """Get section by id
@@ -163,11 +150,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A Section instance with all project details
         """
-        section = self.sections.get(str(section_id), None)
-        if section:
-            return section
-
-        raise TodoistError(f'Section {section_id} not found')
+        return self.sections.get_by_id(item_id=section_id)  # type: ignore
 
     def get_section_by_pattern(self, pattern: str) -> Section:
         """Get a section if its name matches a regex pattern
@@ -180,15 +163,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        if not self.synced:
-            raise TodoistError('Run .sync() before you try to find a section based on a pattern')
-
-        compiled_pattern = re.compile(pattern=pattern)
-        for section in self.sections.values():
-            if compiled_pattern.findall(section.name):
-                return section
-
-        raise TodoistError(f'Section matching {pattern} not found')
+        return self.sections.get_by_pattern(pattern=pattern, field='name')  # type: ignore
 
     def get_stats(self) -> Any:
         """Get Todoist usage statistics
@@ -207,9 +182,11 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Args:
             item: a TodoistBaseModel instance to add to Todoist
         """
-        command_manager.temp_items[item.temp_id] = item  # type: ignore
+        # type: ignore
         model = type(item)
-        command_manager.add_command(data=item.dict(exclude_none=True), command_type=model.Config.command_add)
+        key = model.Config.cache_label
+        model_manager = getattr(self, key)
+        model_manager.add(item=item)
 
     def add_task(self, task: Task) -> None:
         """Add new task to todoist.
@@ -319,9 +296,9 @@ if __name__ == '__main__':
     # print(section)
     # project_ = todoist_.get_project_by_pattern('Private')
     # project_ = todoist_.get_project(project_id='2198523714')
-    # task_to_add = Task(content="Buy Honey", project_id="2198523714", due=Due(string="today"))
-    # todoist_.add(task_to_add)
-    # todoist_.commit()
+    task_to_add = Task(content="Buy Honey", project_id="2198523714", due=Due(string="today"))
+    todoist_.add(task_to_add)
+    todoist_.commit()
     # todoist_.close_task(task=task_to_add)
     # todoist_.commit()
     # todoist_.reopen_task(task=task_to_add)
