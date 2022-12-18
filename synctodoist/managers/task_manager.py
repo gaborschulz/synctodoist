@@ -1,5 +1,3 @@
-from typing import Any
-
 from synctodoist.exceptions import TodoistError
 from synctodoist.managers import command_manager
 from synctodoist.managers.base_manager import BaseManager
@@ -37,31 +35,31 @@ class TaskManager(BaseManager[Task]):
         except Exception as ex:
             raise TodoistError(f'Task {task_id} not found') from ex
 
-    def close(self, task: int | str | Task) -> None:
+    def close(self, item: int | str | Task) -> None:
         """Complete a task
 
         Args:
-            task: the Task object or the id of the task to close
+            item: the Task object or the id of the task to close
         """
-        params, task_id = self._extract_task_id(task)
+        params, task_id = self._extract_params(item)
 
         command_manager.add_command(data={'id': task_id}, command_type=self.model.Config.command_close, **params)
 
-    def reopen(self, task: int | str | Task) -> None:
+    def reopen(self, item: int | str | Task) -> None:
         """Reopen a task
 
         Args:
-            task: the Task object or the id of the task to reopen
-            task: the Task object to reopen (keyword-only argument)
+            item: the Task object or the id of the task to reopen
+            item: the Task object to reopen (keyword-only argument)
 
         Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
         """
 
-        params, task_id = self._extract_task_id(task)
+        params, task_id = self._extract_params(item)
 
         command_manager.add_command(data={'id': task_id}, command_type=self.model.Config.command_reopen, **params)
 
-    def move(self, task: str | int | Task, parent: str | int | Task | None = None, section: str | int | Section | None = None,
+    def move(self, item: str | int | Task, parent: str | int | Task | None = None, section: str | int | Section | None = None,
              project: str | int | Project | None = None):
         """
         Move task to a different parent, section or project
@@ -71,7 +69,7 @@ class TaskManager(BaseManager[Task]):
         To move an item from a section to no section, just use the project_id parameter, with the project it currently belongs to as a value.
 
         Args:
-            task: a Task object or the task id that you want to move
+            item: a Task object or the task id that you want to move
             parent: the parent under which you want to place the task
             section: the section in which you want to place the task
             project: the project in which you want to place the task
@@ -79,7 +77,7 @@ class TaskManager(BaseManager[Task]):
         if not parent and not section and not project:
             raise TodoistError('At least one out of parent, section or project has to be provided.')
 
-        params, task_id = self._extract_task_id(task)
+        params, task_id = self._extract_params(item)
 
         data: dict[str, str] = {'id': task_id}
         match parent:
@@ -107,24 +105,3 @@ class TaskManager(BaseManager[Task]):
                 data['project_id'] = project
 
         command_manager.add_command(data=data, command_type=self.model.Config.command_move, **params)
-
-    @staticmethod
-    def _extract_task_id(task: str | int | Task) -> tuple[dict[str, Any], str]:
-        params: dict[str, Any] = {}
-        task_id: str = ''
-        match task:
-            case Task():
-                params['item'] = task
-                params['is_update_command'] = True
-
-                if not task.id:
-                    task_id = task.temp_id
-                else:
-                    task_id = str(task.id)
-            case int():
-                task_id = str(task_id)
-            case str():
-                task_id = task
-            case _:
-                raise TodoistError('task has to be a Task object, a str or an int')
-        return params, task_id

@@ -137,47 +137,49 @@ class BaseManager(Generic[DataT]):
         with cache_file.open('w', encoding='utf-8') as cache_fp:
             json.dump(cache, cache_fp, default=str)
 
-    def delete(self, item_id: int | str | None = None, *, item: DataT | None = None) -> None:
+    def delete(self, item: int | str | DataT) -> None:
         """Delete an item
 
         Args:
-            item_id: the id of the item to delete
+            item: the id of the item to delete
             item: the Label object to delete (keyword-only argument)
 
         Either the item_id or the item must be provided. The item object takes priority over the item_id argument if both are provided
         """
 
-        if not item_id and not item:
-            raise TodoistError('Either label_id or label have to be provided')
-
-        if isinstance(item, self.model):
-            if not item.id:
-                item_id = item.temp_id
-            else:
-                item_id = str(item.id)
-
-        if isinstance(item_id, int):
-            item_id = str(item_id)
+        _, item_id = self._extract_params(item)
 
         command_manager.add_command(data={'id': item_id}, command_type=self.model.Config.command_delete)
 
-    def update(self, item_id: int | str | DataT, item: DataT):
+    def update(self, item: int | str | DataT, updated_item: DataT):
         """
         Update the item identified by item_id with the data from item
 
         Args:
-            item_id: the item_id of the item to update
-            item: the data to use for the update
+            item: the item_id of the item to update
+            updated_item: the data to use for the update
         """
-        data_item_id: str = item_id  # type: ignore
-        if isinstance(item_id, self.model):
-            if not item_id.id:
-                data_item_id = item_id.temp_id  # type: ignore
-            else:
-                data_item_id = str(item_id.id)
+        params, item_id = self._extract_params(item)
 
-        if isinstance(item_id, int):
-            data_item_id = str(item_id)
+        command_manager.add_command(data={'id': item_id, **updated_item.dict(exclude={'id'}, exclude_none=True, exclude_defaults=True)},
+                                    command_type=self.model.Config.command_update, **params)  # type: ignore
 
-        command_manager.add_command(data={'id': data_item_id, **item.dict(exclude={'id'}, exclude_none=True, exclude_defaults=True)},
-                                    command_type='label_update', item=item_id, is_update_command=True)  # type: ignore
+    def _extract_params(self, item: str | int | DataT) -> tuple[dict[str, Any], str]:
+        params: dict[str, Any] = {}
+        item_id: str = ''
+        match item:
+            case self.model():
+                params['item'] = item
+                params['is_update_command'] = True
+
+                if not item.id:
+                    item_id = item.temp_id
+                else:
+                    item_id = str(item.id)
+            case int():
+                item_id = str(item)
+            case str():
+                item_id = item
+            case _:
+                raise TodoistError('task has to be a Task object, a str or an int')
+        return params, item_id

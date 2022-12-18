@@ -109,7 +109,12 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the label_id or the label must be provided. The label object takes priority over the label_id argument if both are provided
         """
-        self.labels.delete(item_id=label_id, item=label)
+        if label:
+            self.labels.delete(item=label)
+        elif label_id:
+            self.labels.delete(item=label_id)
+        else:
+            raise TodoistError('Either label or label_id has to be provided')
 
     def get_label(self, label_id: int | str) -> Label | None:
         """Get label by id
@@ -144,7 +149,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             label_id: the label_id of the label to update
             label: the data to use for the update
         """
-        self.labels.update(item_id=label_id, item=label)
+        self.labels.update(item=label_id, updated_item=label)
 
     # endregion
 
@@ -168,7 +173,12 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the project_id or the project must be provided. The project object takes priority over the project_id argument if both are provided
         """
-        self.projects.delete(item_id=project_id, item=project)
+        if project:
+            self.projects.delete(item=project)
+        elif project_id:
+            self.projects.delete(item=project_id)
+        else:
+            raise TodoistError('Either project or project_id has to be provided')
 
     def get_project(self, project_id: int | str) -> Project:
         """Get project by id
@@ -218,7 +228,12 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the reminder_id or the reminder must be provided. The reminder object takes priority over the reminder_id argument if both are provided
         """
-        self.reminders.delete(item_id=reminder_id, item=reminder)
+        if reminder:
+            self.reminders.delete(item=reminder)
+        elif reminder_id:
+            self.reminders.delete(item=reminder_id)
+        else:
+            raise TodoistError('Either reminder or reminder_id has to be provided')
 
     def get_reminder(self, reminder_id: int | str) -> Reminder | None:
         """Get reminder by id
@@ -253,7 +268,12 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the section_id or the section must be provided. The section object takes priority over the section_id argument if both are provided
         """
-        self.sections.delete(item_id=section_id, item=section)
+        if section:
+            self.sections.delete(item=section)
+        elif section_id:
+            self.sections.delete(item=section_id)
+        else:
+            raise TodoistError('Either section or section_id has to be provided')
 
     def get_section(self, section_id: int | str) -> Section | None:
         """Get section by id
@@ -303,9 +323,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
         """
         if task:
-            self.tasks.close(task=task)
+            self.tasks.close(item=task)
         elif task_id:
-            self.tasks.close(task=task_id)
+            self.tasks.close(item=task_id)
         else:
             raise TodoistError('Either task or task_id has to be provided')
 
@@ -318,7 +338,12 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
         """
-        self.tasks.delete(item_id=task_id, item=task)
+        if task:
+            self.tasks.delete(item=task)
+        elif task_id:
+            self.tasks.delete(item=task_id)
+        else:
+            raise TodoistError('Either task or task_id has to be provided')
 
     def get_task(self, task_id: int | str) -> Task:
         """Get task by id
@@ -346,7 +371,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             section: the section in which you want to place the task
             project: the project in which you want to place the task
         """
-        self.tasks.move(task=task, parent=parent, section=section, project=project)
+        self.tasks.move(item=task, parent=parent, section=section, project=project)
 
     def get_task_by_pattern(self, pattern: str, return_all: bool = False) -> Task | list[Task]:
         """Get a project if its name matches a regex pattern
@@ -372,9 +397,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
         """
         if task:
-            self.tasks.reopen(task=task)
+            self.tasks.reopen(item=task)
         elif task_id:
-            self.tasks.reopen(task=task_id)
+            self.tasks.reopen(item=task_id)
         else:
             raise TodoistError('Either task or task_id has to be provided')
 

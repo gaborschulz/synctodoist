@@ -16,3 +16,4 @@ class Label(TodoistBaseModel):
         todoist_resource_type: str = 'labels'
         command_add: str = 'label_add'
         command_delete: str = 'label_delete'
+        command_update: str = 'label_update'
