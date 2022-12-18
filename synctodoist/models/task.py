@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from pydantic import conint
+
 from .due import Due
 from .todoist_base_model import TodoistBaseModel
 
@@ -10,7 +12,7 @@ class Task(TodoistBaseModel):
     project_id: str | int | None
     content: str | None
     description: str | None
-    priority: int | None
+    priority: conint(ge=1, le=4) | None  # type: ignore
     due: Due | None
     parent_id: str | int | None
     child_order: int | None

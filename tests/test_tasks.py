@@ -1,5 +1,6 @@
 # pylint: disable-all
 import pytest
+from pydantic import ValidationError
 
 from synctodoist.exceptions import TodoistError
 from synctodoist.models import Task, Due
@@ -97,3 +98,8 @@ def test_move_task_to_different_parent(synced_todoist, task_added, task_added_se
     synced_todoist.move_task(task=task_added, parent=task_added_second)
     synced_todoist.commit()
     assert task_added.parent_id == task_added_second.id
+
+
+def test_task_priority_constraint():
+    with pytest.raises(ValidationError):
+        Task(content='Test', priority=10)
