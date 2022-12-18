@@ -37,4 +37,5 @@ class Task(TodoistBaseModel):
         command_close: str = 'item_complete'
         command_reopen: str = 'item_uncomplete'
         command_move: str = 'item_move'
+        command_update: str = 'item_update'
         api_get: str = 'items/get'

@@ -258,7 +258,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
     def update_reminder(self, reminder_id: int | str | Reminder, reminder: Reminder):
         """
-        Update the label identified by label_id with the data from label
+        Update the reminder identified by reminder_id with the data from reminder
 
         Args:
             reminder_id: the reminder_id of the reminder to update
@@ -322,7 +322,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
     def update_section(self, section_id: int | str | Section, section: Section):
         """
-        Update the label identified by label_id with the data from label
+        Update the section identified by section_id with the data from section
 
         Args:
             section_id: the section_id of the section to update
@@ -386,6 +386,20 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         return self.tasks.get_by_id(item_id=task_id)
 
+    def get_task_by_pattern(self, pattern: str, return_all: bool = False) -> Task | list[Task]:
+        """Get a project if its name matches a regex pattern
+
+        Args:
+            pattern: the regex pattern against which the project's name is matched
+            return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
+
+        Returns:
+            A Project instance containing the project details
+
+        IMPORTANT: You have to run the .sync() method first for this to work
+        """
+        return self.tasks.get_by_pattern(pattern=pattern, field='content', return_all=return_all)
+
     def move_task(self, task: Task, parent: str | int | Task | None = None, section: str | int | Section | None = None,
                   project: str | int | Project | None = None) -> None:
         """
@@ -403,22 +417,8 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         self.tasks.move(item=task, parent=parent, section=section, project=project)
 
-    def get_task_by_pattern(self, pattern: str, return_all: bool = False) -> Task | list[Task]:
-        """Get a project if its name matches a regex pattern
-
-        Args:
-            pattern: the regex pattern against which the project's name is matched
-            return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
-
-        Returns:
-            A Project instance containing the project details
-
-        IMPORTANT: You have to run the .sync() method first for this to work
-        """
-        return self.tasks.get_by_pattern(pattern=pattern, field='content', return_all=return_all)
-
     def reopen_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
-        """Uncomplete a task
+        """Reopen a task
 
         Args:
             task_id: the id of the task to reopen
@@ -432,6 +432,16 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             self.tasks.reopen(item=task_id)
         else:
             raise TodoistError('Either task or task_id has to be provided')
+
+    def update_task(self, task_id: int | str | Task, task: Task):
+        """
+        Update the label identified by task_id with the data from task
+
+        Args:
+            task_id: the task_id of the task to update
+            task: the data to use for the update
+        """
+        self.tasks.update(item=task_id, updated_item=task)
 
     # endregion
 

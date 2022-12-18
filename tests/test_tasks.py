@@ -103,3 +103,12 @@ def test_move_task_to_different_parent(synced_todoist, task_added, task_added_se
 def test_task_priority_constraint():
     with pytest.raises(ValidationError):
         Task(content='Test', priority=10)
+
+
+def test_update_task(synced_todoist, task_added):
+    modified_task = task_added.copy()
+    assert task_added.priority != 4
+    modified_task.priority = 4
+    synced_todoist.update_task(task_id=task_added, task=modified_task)
+    synced_todoist.commit()
+    assert task_added.priority == modified_task.priority
