@@ -208,7 +208,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
     def update_project(self, project_id: int | str | Project, project: Project):
         """
-        Update the label identified by label_id with the data from label
+        Update the project identified by project_id with the data from project
 
         Args:
             project_id: the project_id of the project to update
@@ -309,6 +309,16 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         IMPORTANT: You have to run the .sync() method first for this to work
         """
         return self.sections.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
+
+    def update_section(self, section_id: int | str | Section, section: Section):
+        """
+        Update the label identified by label_id with the data from label
+
+        Args:
+            section_id: the section_id of the section to update
+            section: the data to use for the update
+        """
+        self.sections.update(item=section_id, updated_item=section)
 
     # endregion
 

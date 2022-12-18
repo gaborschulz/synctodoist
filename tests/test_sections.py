@@ -1,4 +1,6 @@
 # pylint: disable-all
+from datetime import datetime
+
 import pytest
 
 from synctodoist.exceptions import TodoistError
@@ -36,3 +38,11 @@ def test_delete_section_by_id(synced_todoist, section_added):
     synced_todoist.commit()
     with pytest.raises(TodoistError):
         synced_todoist.get_section(section_id=section_added.id)
+
+
+def test_update_section(synced_todoist, section_added):
+    modified_section = section_added.copy()
+    modified_section.name = f'test_update_section_{int(datetime.now().timestamp())}'
+    synced_todoist.update_section(section_id=section_added, section=modified_section)
+    synced_todoist.commit()
+    assert section_added.name == modified_section.name
