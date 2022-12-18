@@ -26,3 +26,4 @@ class Reminder(TodoistBaseModel):
         todoist_resource_type: str = 'reminders'
         command_add: str = 'reminder_add'
         command_delete: str = 'reminder_delete'
+        command_update: str = 'reminder_update'

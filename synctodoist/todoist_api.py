@@ -256,6 +256,16 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         return self.reminders.get_by_id(item_id=reminder_id)  # type: ignore
 
+    def update_reminder(self, reminder_id: int | str | Reminder, reminder: Reminder):
+        """
+        Update the label identified by label_id with the data from label
+
+        Args:
+            reminder_id: the reminder_id of the reminder to update
+            reminder: the data to use for the update
+        """
+        self.reminders.update(item=reminder_id, updated_item=reminder)
+
     # endregion
 
     # region Section methods
