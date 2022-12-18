@@ -7,7 +7,7 @@ class TodoistBaseModel(BaseModel):
     """Todoist base model"""
     id: str | int | None
     is_deleted: bool = False
-    temp_id: str | None = Field(default_factory=str_uuid4_factory)
+    temp_id: str = Field(default_factory=str_uuid4_factory)
 
     class Config:
         """Config for TodoistBaseModel"""

@@ -302,7 +302,12 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
         """
-        self.tasks.close(task_id=task_id, task=task)
+        if task:
+            self.tasks.close(task=task)
+        elif task_id:
+            self.tasks.close(task=task_id)
+        else:
+            raise TodoistError('Either task or task_id has to be provided')
 
     def delete_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Delete a task
@@ -366,7 +371,12 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
         """
-        self.tasks.reopen(task_id=task_id, task=task)
+        if task:
+            self.tasks.reopen(task=task)
+        elif task_id:
+            self.tasks.reopen(task=task_id)
+        else:
+            raise TodoistError('Either task or task_id has to be provided')
 
     # endregion
 
@@ -397,14 +407,14 @@ if __name__ == '__main__':  # pragma: no cover
     # print(section)
     # section = todoist_.get_section_by_pattern(pattern="Routines")
     # print(section)
-    project_: Project = todoist_.get_project_by_pattern('Personal')  # type: ignore
+    # project_: Project = todoist_.get_project_by_pattern('Personal')  # type: ignore
     # project_ = todoist_.get_project(project_id='2198523714')
-    task_to_add = Task(content="Buy Honey", project_id="2198523714")
-    todoist_.add(task_to_add)
-    todoist_.commit()
-    todoist_.move_task(task=task_to_add, project=project_)
-    todoist_.commit()
-    print(task_to_add)
+    # task_to_add = Task(content="Buy Honey", project_id="2198523714")
+    # todoist_.add(task_to_add)
+    # todoist_.commit()
+    # todoist_.move_task(task=task_to_add, project=project_)
+    # todoist_.commit()
+    # print(task_to_add)
     # todoist_.close_task(task=task_to_add)
     # todoist_.commit()
     # todoist_.reopen_task(task=task_to_add)

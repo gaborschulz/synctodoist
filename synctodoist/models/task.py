@@ -32,4 +32,7 @@ class Task(TodoistBaseModel):
         todoist_resource_type: str = 'items'
         command_add: str = 'item_add'
         command_delete: str = 'item_delete'
+        command_close: str = 'item_complete'
+        command_reopen: str = 'item_uncomplete'
+        command_move: str = 'item_move'
         api_get: str = 'items/get'
