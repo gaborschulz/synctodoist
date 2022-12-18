@@ -10,30 +10,30 @@ class TaskManager(BaseManager[Task]):
     """Task manager"""
     model = Task
 
-    def get_by_id(self, task_id: int | str) -> Task:  # pylint: disable=arguments-renamed
+    def get_by_id(self, item_id: int | str) -> Task:  # pylint: disable=arguments-renamed
         """Get task by id
 
         Args:
-            task_id: the id of the task
+            item_id: the id of the task
 
         Returns:
             A Task instance with all task details
         """
-        if task := super().get_by_id(item_id=task_id):
+        if task := super().get_by_id(item_id=item_id):
             return task
 
         try:
             endpoint = self.model.Config.api_get
-            if isinstance(task_id, str) and task_id.isdigit():
-                task_id = int(task_id)
+            if isinstance(item_id, str) and item_id.isdigit():
+                item_id = int(item_id)
 
-            data = {'item_id': task_id}
+            data = {'item_id': item_id}
             result = command_manager.post(data, endpoint, self._api.api_key)
             task = Task(**result.get('item'))
             self._items.update({task.id: task})  # type: ignore
             return task
         except Exception as ex:
-            raise TodoistError(f'Task {task_id} not found') from ex
+            raise TodoistError(f'Task {item_id} not found') from ex
 
     def close(self, item: int | str | Task) -> None:
         """Complete a task

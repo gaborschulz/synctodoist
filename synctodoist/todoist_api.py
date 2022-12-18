@@ -190,7 +190,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A Project instance with all project details
         """
-        return self.projects.get_by_id(project_id=project_id)
+        return self.projects.get_by_id(item_id=project_id)
 
     def get_project_by_pattern(self, pattern: str, return_all: bool = False) -> Project | list[Project]:
         """Get a project if its name matches a regex pattern
@@ -354,7 +354,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A Task instance with all task details
         """
-        return self.tasks.get_by_id(task_id=task_id)
+        return self.tasks.get_by_id(item_id=task_id)
 
     def move_task(self, task: Task, parent: str | int | Task | None = None, section: str | int | Section | None = None,
                   project: str | int | Project | None = None) -> None:
