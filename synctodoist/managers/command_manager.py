@@ -95,11 +95,13 @@ def commit(api_key: str) -> Any:
     for key, value in result['sync_status'].items():
         if 'error' in value:
             errors.append({key: value})
-            raise TodoistError(f'Sync Error: {errors}')
         if value == 'ok':
             command = commands.pop(key)
             if command.item and command.is_update_command:
                 _update_item(command)
+
+    if errors:
+        raise TodoistError(f'Sync Error: {errors}')
 
     for key, value in result['temp_id_mapping'].items():
         item = temp_items[key]

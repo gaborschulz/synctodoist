@@ -40,6 +40,11 @@ def test_delete_section_by_id(synced_todoist, section_added):
         synced_todoist.get_section(section_id=section_added.id)
 
 
+def test_delete_section_by_none(synced_todoist):
+    with pytest.raises(TodoistError):
+        synced_todoist.delete_section()
+
+
 def test_update_section(synced_todoist, section_added):
     modified_section = section_added.copy()
     modified_section.name = f'test_update_section_{int(datetime.now().timestamp())}'

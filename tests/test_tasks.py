@@ -11,8 +11,9 @@ def test_add_task_no_due_date(synced_todoist, project_inbox):
     assert task.temp_id
     synced_todoist.add_task(task)
     synced_todoist.commit()
-    print(task)
     assert task.id
+    synced_todoist.delete_task(task=task)
+    synced_todoist.commit()
 
 
 def test_add_task_with_due_date(synced_todoist, project_inbox):
@@ -22,6 +23,8 @@ def test_add_task_with_due_date(synced_todoist, project_inbox):
     synced_todoist.commit()
     print(task)
     assert task.id
+    synced_todoist.delete_task(task=task)
+    synced_todoist.commit()
 
 
 def test_get_task_str_id(synced_todoist, task_added):
@@ -64,6 +67,30 @@ def test_close_task_uncommitted(synced_todoist, project_inbox):
     assert task.checked
 
 
+def test_reopen_task_by_model(synced_todoist, task_added):
+    task = synced_todoist.get_task(task_id=task_added.id)
+    synced_todoist.close_task(task=task)
+    synced_todoist.commit()
+    synced_todoist.reopen_task(task=task)
+    synced_todoist.commit()
+    task = synced_todoist.get_task(task_id=task_added.id)
+    assert not task.checked
+
+
+def test_reopen_task_by_id(synced_todoist, task_added):
+    synced_todoist.close_task(task_id=task_added.id)
+    synced_todoist.commit()
+    synced_todoist.reopen_task(task_id=task_added.id)
+    synced_todoist.commit()
+    task = synced_todoist.get_task(task_id=task_added.id)
+    assert not task.checked
+
+
+def test_reopen_task_by_none(synced_todoist):
+    with pytest.raises(TodoistError):
+        synced_todoist.reopen_task()
+
+
 def test_delete_task_by_model(synced_todoist, task_added):
     synced_todoist.delete_task(task_id=task_added.id)
     synced_todoist.commit()
@@ -76,6 +103,11 @@ def test_delete_task_by_id(synced_todoist, task_added):
     synced_todoist.commit()
     with pytest.raises(TodoistError):
         synced_todoist.get_task(task_id=task_added.id)
+
+
+def test_delete_task_by_none(synced_todoist):
+    with pytest.raises(TodoistError):
+        synced_todoist.delete_task()
 
 
 def test_move_task_to_different_project(synced_todoist, task_added):

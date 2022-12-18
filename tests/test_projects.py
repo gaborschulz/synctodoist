@@ -5,16 +5,16 @@ from synctodoist.exceptions import TodoistError
 from synctodoist.models import ColorEnum
 
 
-def test_get_project_str_id(todoist):
-    project_id = '2303492502'
+def test_get_project_str_id(todoist, project_added):
+    project_id = project_added.id
     project = todoist.get_project(project_id=project_id)
-    assert project.name == 'Inbox'
+    assert project.name == project_added.name
 
 
-def test_get_project_int_id(todoist):
-    project_id = 2303492502
+def test_get_project_int_id(todoist, project_added):
+    project_id = int(project_added.id)
     project = todoist.get_project(project_id=project_id)
-    assert project.name == 'Inbox'
+    assert project.name == project_added.name
 
 
 def test_get_project_by_pattern_unsynced(todoist):
@@ -47,6 +47,11 @@ def test_delete_project_by_id(synced_todoist, project_added):
     synced_todoist.commit()
     with pytest.raises(TodoistError):
         synced_todoist.get_project(project_id=project_added.id)
+
+
+def test_delete_project_by_none(synced_todoist):
+    with pytest.raises(TodoistError):
+        synced_todoist.delete_project()
 
 
 def test_update_project(synced_todoist, project_added):

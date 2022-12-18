@@ -24,7 +24,7 @@ class TodoistBaseModel(BaseModel):
         """
         Update model instance with the content of data
         Args:
-            **data: a dictionary-like object that contains the fields and the values to be updated
+            **data: keyword arguments with the field to update
         """
         values, fields, error = validate_model(self.__class__, data)
 

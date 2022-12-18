@@ -39,6 +39,11 @@ def test_delete_label_by_id(synced_todoist, label_added):
         synced_todoist.get_label(label_id=label_added.id)
 
 
+def test_delete_label_by_none(synced_todoist):
+    with pytest.raises(TodoistError):
+        synced_todoist.delete_label()
+
+
 def test_update_label(synced_todoist, label_added):
     modified_label = label_added.copy()
     modified_label.color = ColorEnum.mint_green

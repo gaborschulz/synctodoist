@@ -452,10 +452,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A dict with all user stats
         """
-        try:
-            return command_manager.get('completed/get_stats', self.api_key)
-        except Exception as ex:
-            raise TodoistError('User stats not available') from ex
+        return command_manager.get('completed/get_stats', self.api_key)
     # endregion
     # endregion
 
