@@ -21,19 +21,20 @@ SYNC_TOKEN: str = '*'
 cache_dir = Path(tempfile.gettempdir())
 
 
-def add_command(data: Any, command_type: str, item: TodoistBaseModel | None = None) -> None:
+def add_command(data: Any, command_type: str, item: TodoistBaseModel | None = None, is_update_command: bool = False) -> None:
     """Add a Todoist command to command cache
 
     Args:
         data: The dataset to submit with the command
         command_type: The type of the command
         item: the TodoistBaseModel sublcass item to which this command is linked
+        is_update_command: True if this command should update item on successful execution
     """
     if item and getattr(item, 'temp_id', None):
         temp_items[str(item.temp_id)] = item
 
     temp_id = data.pop('temp_id', str(uuid.uuid4()))
-    command = Command(type=command_type, temp_id=temp_id, args=data)
+    command = Command(type=command_type, temp_id=temp_id, args=data, item=item, is_update_command=is_update_command)
 
     commands[command.uuid] = command
 
@@ -74,6 +75,12 @@ def get(endpoint: str, api_key: str) -> Any:
         return response.json()  # type: ignore
 
 
+def _update_item(command):
+    values = command.args.copy()
+    values.pop('id')
+    command.item.refresh(**values)
+
+
 def commit(api_key: str) -> Any:
     """Commit open commands to Todoist"""
     endpoint = 'sync'
@@ -86,7 +93,9 @@ def commit(api_key: str) -> Any:
             errors.append({key: value})
             raise TodoistError(f'Sync Error: {errors}')
         if value == 'ok':
-            commands.pop(key)
+            command = commands.pop(key)
+            if command.item and command.is_update_command:
+                _update_item(command)
 
     for key, value in result['temp_id_mapping'].items():
         item = temp_items[key]

@@ -57,7 +57,7 @@ class TaskManager(BaseManager[Task]):
         if isinstance(task_id, int):
             task_id = str(task_id)
 
-        command_manager.add_command(data={'id': task_id}, command_type='item_complete')
+        command_manager.add_command(data={'id': task_id}, command_type='item_complete', item=task, is_update_command=True)
 
     @staticmethod
     def reopen(task_id: int | str | None = None, *, task: Task | None = None) -> None:
@@ -81,7 +81,7 @@ class TaskManager(BaseManager[Task]):
         if isinstance(task_id, int):
             task_id = str(task_id)
 
-        command_manager.add_command(data={'id': task_id}, command_type='item_uncomplete')
+        command_manager.add_command(data={'id': task_id}, command_type='item_uncomplete', item=task, is_update_command=True)
 
     @staticmethod
     def delete(task_id: int | str | None = None, *, task: Task | None = None) -> None:
@@ -106,7 +106,7 @@ class TaskManager(BaseManager[Task]):
         if isinstance(task_id, int):
             task_id = str(task_id)
 
-        command_manager.add_command(data={'id': task_id}, command_type='item_delete')
+        command_manager.add_command(data={'id': task_id}, command_type='item_delete', item=task)
 
     @staticmethod
     def move(task: Task, parent: str | int | Task | None = None, section: str | int | Section | None = None, project: str | int | Project | None = None):
@@ -134,27 +134,21 @@ class TaskManager(BaseManager[Task]):
                 data['parent_id'] = str(parent)
             case str():
                 data['parent_id'] = parent
-            case _:
-                raise TypeError('Unsupported type for parent')
 
         match section:
-            case Task():
+            case Section():
                 data['section_id'] = str(section.id)
             case int():
                 data['section_id'] = str(section)
             case str():
                 data['section_id'] = section
-            case _:
-                raise TypeError('Unsupported type for section')
 
         match project:
-            case Task():
+            case Project():
                 data['project_id'] = str(project.id)
             case int():
                 data['project_id'] = str(project)
             case str():
                 data['project_id'] = project
-            case _:
-                raise TypeError('Unsupported type for project')
 
-        command_manager.add_command(data=data, command_type='item_move')
+        command_manager.add_command(data=data, command_type='item_move', item=task, is_update_command=True)

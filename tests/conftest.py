@@ -41,6 +41,9 @@ def task_added(synced_todoist, project_inbox):
     synced_todoist.commit()
 
 
+task_added_second = task_added
+
+
 @pytest.fixture
 def project_added(synced_todoist):
     project = Project(name=f'fixture_project_added_{int(datetime.now().timestamp())}_{randint(0, 10000)}')

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validate_model
 
 from synctodoist.models.utils import str_uuid4_factory
 
@@ -17,3 +17,17 @@ class TodoistBaseModel(BaseModel):
         cache_label: str = ''
         command_add: str = ''
         api_get: str = ''
+
+    def refresh(self, **data):
+        """
+        Update model instance with the content of data
+        Args:
+            **data: a dictionary-like object that contains the fields and the values to be updated
+        """
+        values, fields, error = validate_model(self.__class__, data)
+
+        if error:
+            raise error
+
+        for field in fields:
+            setattr(self, field, values[field])
