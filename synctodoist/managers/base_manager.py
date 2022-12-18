@@ -8,11 +8,12 @@ from typing import Iterable, Any, TYPE_CHECKING, TypeVar, Generic, Type
 
 from synctodoist.exceptions import TodoistError
 from synctodoist.managers import command_manager
+from synctodoist.models import TodoistBaseModel
 
 if TYPE_CHECKING:
     from synctodoist.todoist_api import TodoistAPI
 
-DataT = TypeVar('DataT')
+DataT = TypeVar('DataT', bound=TodoistBaseModel)
 
 
 class BaseManager(Generic[DataT]):
@@ -34,7 +35,7 @@ class BaseManager(Generic[DataT]):
 
     def update_dict(self, _m: dict[str, DataT], **kwargs) -> None:
         """Update projects"""
-        return self._items.update(_m, **kwargs)  # type: ignore
+        return self._items.update(_m, **kwargs)
 
     def values(self) -> Iterable[DataT]:
         """Get values"""
@@ -58,9 +59,9 @@ class BaseManager(Generic[DataT]):
             A TodoistBaseModel instance with all item details
         """
         if item := self.get(str(item_id), None):
-            return item  # type: ignore
+            return item
 
-        if not hasattr(self.model.Config, 'api_get'):  # type: ignore
+        if not hasattr(self.model.Config, 'api_get'):
             raise TodoistError(f'{self.model} does not support the get method without syncing. Please, sync your API first.')
 
         return None
@@ -104,7 +105,7 @@ class BaseManager(Generic[DataT]):
         if full_sync:
             for key, value in self._items.items():
                 if key in received_keys:
-                    result[key] = value  # type: ignore
+                    result[key] = value
         else:
             result = {key: value for key, value in self._items.items() if not getattr(value, 'is_deleted', False)}
 
@@ -112,9 +113,7 @@ class BaseManager(Generic[DataT]):
 
     def add(self, item: DataT):
         """Add new item to command_manager queue"""
-        command_manager.add_command(data=item.dict(exclude_none=True, exclude_defaults=True),  # type: ignore
-                                    command_type=self.model.Config.command_add,  # type: ignore
-                                    item=item)  # type: ignore
+        command_manager.add_command(data=item.dict(exclude_none=True, exclude_defaults=True), command_type=self.model.Config.command_add, item=item)
 
     def read_cache(self):
         """Read cached data"""
@@ -152,15 +151,15 @@ class BaseManager(Generic[DataT]):
             raise TodoistError('Either label_id or label have to be provided')
 
         if isinstance(item, self.model):
-            if not item.id:  # type: ignore
-                item_id = item.temp_id  # type: ignore
+            if not item.id:
+                item_id = item.temp_id
             else:
-                item_id = str(item.id)  # type: ignore
+                item_id = str(item.id)
 
         if isinstance(item_id, int):
             item_id = str(item_id)
 
-        command_manager.add_command(data={'id': item_id}, command_type=self.model.Config.command_delete)  # type: ignore
+        command_manager.add_command(data={'id': item_id}, command_type=self.model.Config.command_delete)
 
     def update(self, item_id: int | str | DataT, item: DataT):
         """
@@ -170,15 +169,15 @@ class BaseManager(Generic[DataT]):
             item_id: the item_id of the item to update
             item: the data to use for the update
         """
-        data_item_id = item_id
+        data_item_id: str = item_id  # type: ignore
         if isinstance(item_id, self.model):
-            if not item_id.id:  # type: ignore
+            if not item_id.id:
                 data_item_id = item_id.temp_id  # type: ignore
             else:
-                data_item_id = str(item_id.id)  # type: ignore
+                data_item_id = str(item_id.id)
 
         if isinstance(item_id, int):
             data_item_id = str(item_id)
 
-        command_manager.add_command(data={'id': data_item_id, **item.dict(exclude={'id'}, exclude_none=True, exclude_defaults=True)},  # type: ignore
+        command_manager.add_command(data={'id': data_item_id, **item.dict(exclude={'id'}, exclude_none=True, exclude_defaults=True)},
                                     command_type='label_update', item=item_id, is_update_command=True)  # type: ignore
