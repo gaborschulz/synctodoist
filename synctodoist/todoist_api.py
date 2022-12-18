@@ -206,6 +206,16 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         return self.projects.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
 
+    def update_project(self, project_id: int | str | Project, project: Project):
+        """
+        Update the label identified by label_id with the data from label
+
+        Args:
+            project_id: the project_id of the project to update
+            project: the data to use for the update
+        """
+        self.projects.update(item=project_id, updated_item=project)
+
     # endregion
 
     # region Reminder methods

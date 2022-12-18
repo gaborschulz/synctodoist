@@ -2,6 +2,7 @@
 import pytest
 
 from synctodoist.exceptions import TodoistError
+from synctodoist.models import ColorEnum
 
 
 def test_get_project_str_id(todoist):
@@ -46,3 +47,11 @@ def test_delete_project_by_id(synced_todoist, project_added):
     synced_todoist.commit()
     with pytest.raises(TodoistError):
         synced_todoist.get_project(project_id=project_added.id)
+
+
+def test_update_project(synced_todoist, project_added):
+    modified_project = project_added.copy()
+    modified_project.color = ColorEnum.mint_green
+    synced_todoist.update_project(project_id=project_added, project=modified_project)
+    synced_todoist.commit()
+    assert project_added.color == modified_project.color

@@ -2,6 +2,7 @@
 import pytest
 
 from synctodoist.exceptions import TodoistError
+from synctodoist.models import ColorEnum
 
 
 def test_get_label_int_id(synced_todoist, label_added):
@@ -40,7 +41,7 @@ def test_delete_label_by_id(synced_todoist, label_added):
 
 def test_update_label(synced_todoist, label_added):
     modified_label = label_added.copy()
-    modified_label.color = 'mint_green'
+    modified_label.color = ColorEnum.mint_green
     synced_todoist.update_label(label_id=label_added, label=modified_label)
     synced_todoist.commit()
     assert label_added.color == modified_label.color
