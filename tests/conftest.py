@@ -7,7 +7,8 @@ import pytest
 from dotenv import load_dotenv
 
 from synctodoist import TodoistAPI
-from synctodoist.models import Task, Due, Project, Label, Section, Reminder
+from synctodoist.managers import command_manager
+from synctodoist.models import Task, Due, Project, Label, Section, Reminder, ReminderTypeEnum
 
 load_dotenv()
 API_KEY = os.environ.get('TODOIST_API')
@@ -76,7 +77,19 @@ def section_added(synced_todoist, project_added):
 
 @pytest.fixture
 def reminder_added(synced_todoist, task_added):
-    reminder = Reminder(item_id=task_added.id, type='relative', mm_offset=30)
+    reminder = Reminder(item_id=task_added.id, type=ReminderTypeEnum.relative, minute_offset=30)
     synced_todoist.add_reminder(reminder)
     synced_todoist.commit()
     yield reminder
+
+
+@pytest.fixture(autouse=True, scope='session')
+def print_total_todoist_count():
+    # setup_stuff
+    yield
+    print('\n\n')
+    print('Todoist Call Summary')
+    print('-' * 30)
+    print(f'{command_manager.full_sync_count = }')
+    print(f'{command_manager.partial_sync_count = }')
+    print('-' * 30)

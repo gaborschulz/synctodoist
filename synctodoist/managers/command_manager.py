@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 import json
 import tempfile
 import uuid
@@ -19,6 +20,8 @@ commands: dict[str, Command] = {}
 temp_items: dict[str, TodoistBaseModel] = {}
 SYNC_TOKEN: str = '*'
 cache_dir = Path(tempfile.gettempdir())
+full_sync_count = 0
+partial_sync_count = 0
 
 
 def add_command(data: Any, command_type: str, item: TodoistBaseModel | None = None, is_update_command: bool = False) -> None:
@@ -87,9 +90,17 @@ def _update_item(command):
 
 def commit(api_key: str) -> Any:
     """Commit open commands to Todoist"""
+    global full_sync_count  # pylint: disable=global-statement
+    global partial_sync_count  # pylint: disable=global-statement
+
     endpoint = 'sync'
     data = {'commands': [command.dict(exclude_none=True, exclude_defaults=True) for command in commands.values()]}
     result = post(data, endpoint, api_key)
+
+    if result.get('full_sync', False):
+        full_sync_count += 1
+    else:
+        partial_sync_count += 1
 
     errors = []
     for key, value in result['sync_status'].items():
