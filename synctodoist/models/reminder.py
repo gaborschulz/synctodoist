@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from .due import Due
+from .enums import LocTriggerEnum, ReminderTypeEnum
 from .todoist_base_model import TodoistBaseModel
 
 
@@ -8,13 +9,13 @@ class Reminder(TodoistBaseModel):
     """Reminder model"""
     notify_uid: str | int | None
     item_id: str | int | None
-    type: str
+    type: ReminderTypeEnum
     due: Due | None
     minute_offset: int | None = Field(alias='mm_offset')
     name: str | None
     loc_lat: str | None
     loc_long: str | None
-    loc_trigger: str | None
+    loc_trigger: LocTriggerEnum | None
     radius: int | None
 
     class Config:

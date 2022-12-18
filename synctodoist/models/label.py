@@ -1,10 +1,11 @@
+from .enums import ColorEnum
 from .todoist_base_model import TodoistBaseModel
 
 
 class Label(TodoistBaseModel):
     """Label model"""
     name: str
-    color: str | None
+    color: ColorEnum | None
     item_order: int | None
     is_favorite: bool = False
 
