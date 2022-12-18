@@ -136,6 +136,16 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         """
         return self.labels.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
 
+    def update_label(self, label_id: int | str | Label, label: Label):
+        """
+        Update the label identified by label_id with the data from label
+
+        Args:
+            label_id: the label_id of the label to update
+            label: the data to use for the update
+        """
+        self.labels.modify(label_id=label_id, label=label)
+
     # endregion
 
     # region Project methods

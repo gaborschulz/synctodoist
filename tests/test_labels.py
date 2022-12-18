@@ -36,3 +36,11 @@ def test_delete_label_by_id(synced_todoist, label_added):
     synced_todoist.commit()
     with pytest.raises(TodoistError):
         synced_todoist.get_label(label_id=label_added.id)
+
+
+def test_update_label(synced_todoist, label_added):
+    modified_label = label_added.copy()
+    modified_label.color = 'mint_green'
+    synced_todoist.update_label(label_id=label_added, label=modified_label)
+    synced_todoist.commit()
+    assert label_added.color == modified_label.color

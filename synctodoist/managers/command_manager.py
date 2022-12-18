@@ -34,7 +34,11 @@ def add_command(data: Any, command_type: str, item: TodoistBaseModel | None = No
         temp_items[str(item.temp_id)] = item
 
     temp_id = data.pop('temp_id', str(uuid.uuid4()))
-    command = Command(type=command_type, temp_id=temp_id, args=data, item=item, is_update_command=is_update_command)
+    extra_params: dict[str, Any] = {}
+    if item:
+        extra_params['item'] = item
+        extra_params['is_update_command'] = is_update_command
+    command = Command(type=command_type, temp_id=temp_id, args=data, **extra_params)
 
     commands[command.uuid] = command
 

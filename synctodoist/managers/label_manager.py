@@ -31,3 +31,24 @@ class LabelManager(BaseManager[Label]):
             label_id = str(label_id)
 
         command_manager.add_command(data={'id': label_id}, command_type='label_delete')
+
+    def modify(self, label_id: int | str | Label, label: Label):
+        """
+        Update the label identified by label_id with the data from label
+
+        Args:
+            label_id: the label_id of the label to update
+            label: the data to use for the update
+        """
+        data_label_id = label_id
+        if isinstance(label_id, Label):
+            if not label.id:
+                data_label_id = label_id.temp_id  # type: ignore
+            else:
+                data_label_id = str(label.id)
+
+        if isinstance(label_id, int):
+            data_label_id = str(label_id)
+
+        command_manager.add_command(data={'id': data_label_id, **label.dict(exclude={'id'}, exclude_none=True, exclude_defaults=True)},
+                                    command_type='label_update', item=label_id, is_update_command=True)  # type: ignore
