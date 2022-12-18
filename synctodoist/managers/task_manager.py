@@ -48,7 +48,7 @@ class TaskManager(BaseManager[Task]):
         command_manager.add_command(data={'id': task_id}, command_type=self.model.Config.command_close, **params)
 
     def reopen(self, task: int | str | Task) -> None:
-        """Uncomplete a task
+        """Reopen a task
 
         Args:
             task: the Task object or the id of the task to reopen
