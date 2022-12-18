@@ -21,3 +21,4 @@ class Section(TodoistBaseModel):
         todoist_name: str = 'section'
         todoist_resource_type: str = 'sections'
         command_add: str = 'section_add'
+        command_delete: str = 'section_delete'

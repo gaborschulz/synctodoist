@@ -77,7 +77,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             target = getattr(self, key)
             model = CACHE_MAPPING[key]
             # Add new items
-            target.update({x['id']: model(**x) for x in result[model.Config.todoist_resource_type]})
+            target.update_dict({x['id']: model(**x) for x in result[model.Config.todoist_resource_type]})
             # Remove deleted items
             target.remove_deleted(result[model.Config.todoist_resource_type], result['full_sync'])
 
@@ -109,7 +109,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the label_id or the label must be provided. The label object takes priority over the label_id argument if both are provided
         """
-        self.labels.delete(label_id=label_id, label=label)
+        self.labels.delete(item_id=label_id, item=label)
 
     def get_label(self, label_id: int | str) -> Label | None:
         """Get label by id
@@ -144,7 +144,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             label_id: the label_id of the label to update
             label: the data to use for the update
         """
-        self.labels.modify(label_id=label_id, label=label)
+        self.labels.update(item_id=label_id, item=label)
 
     # endregion
 
@@ -168,7 +168,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the project_id or the project must be provided. The project object takes priority over the project_id argument if both are provided
         """
-        self.projects.delete(project_id=project_id, project=project)
+        self.projects.delete(item_id=project_id, item=project)
 
     def get_project(self, project_id: int | str) -> Project:
         """Get project by id
@@ -218,7 +218,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the reminder_id or the reminder must be provided. The reminder object takes priority over the reminder_id argument if both are provided
         """
-        self.reminders.delete(reminder_id=reminder_id, reminder=reminder)
+        self.reminders.delete(item_id=reminder_id, item=reminder)
 
     def get_reminder(self, reminder_id: int | str) -> Reminder | None:
         """Get reminder by id
@@ -253,7 +253,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the section_id or the section must be provided. The section object takes priority over the section_id argument if both are provided
         """
-        self.sections.delete(section_id=section_id, section=section)
+        self.sections.delete(item_id=section_id, item=section)
 
     def get_section(self, section_id: int | str) -> Section | None:
         """Get section by id
@@ -313,7 +313,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
         """
-        self.tasks.delete(task_id=task_id, task=task)
+        self.tasks.delete(item_id=task_id, item=task)
 
     def get_task(self, task_id: int | str) -> Task:
         """Get task by id

@@ -16,6 +16,7 @@ class TodoistBaseModel(BaseModel):
         todoist_resource_type: str = ''
         cache_label: str = ''
         command_add: str = ''
+        command_delete: str = ''
         api_get: str = ''
 
     def refresh(self, **data):

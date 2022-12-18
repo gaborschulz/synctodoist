@@ -20,4 +20,5 @@ class Project(TodoistBaseModel):
         todoist_name: str = 'project'
         todoist_resource_type: str = 'projects'
         command_add: str = 'project_add'
+        command_delete: str = 'project_delete'
         api_get: str = 'projects/get'

@@ -32,7 +32,7 @@ class BaseManager(Generic[DataT]):
         """Get item by key"""
         return self._items.get(__key, default)
 
-    def update(self, _m: dict[str, DataT], **kwargs) -> None:
+    def update_dict(self, _m: dict[str, DataT], **kwargs) -> None:
         """Update projects"""
         return self._items.update(_m, **kwargs)  # type: ignore
 
@@ -137,3 +137,48 @@ class BaseManager(Generic[DataT]):
 
         with cache_file.open('w', encoding='utf-8') as cache_fp:
             json.dump(cache, cache_fp, default=str)
+
+    def delete(self, item_id: int | str | None = None, *, item: DataT | None = None) -> None:
+        """Delete an item
+
+        Args:
+            item_id: the id of the item to delete
+            item: the Label object to delete (keyword-only argument)
+
+        Either the item_id or the item must be provided. The item object takes priority over the item_id argument if both are provided
+        """
+
+        if not item_id and not item:
+            raise TodoistError('Either label_id or label have to be provided')
+
+        if isinstance(item, self.model):
+            if not item.id:  # type: ignore
+                item_id = item.temp_id  # type: ignore
+            else:
+                item_id = str(item.id)  # type: ignore
+
+        if isinstance(item_id, int):
+            item_id = str(item_id)
+
+        command_manager.add_command(data={'id': item_id}, command_type=self.model.Config.command_delete)  # type: ignore
+
+    def update(self, item_id: int | str | DataT, item: DataT):
+        """
+        Update the item identified by item_id with the data from item
+
+        Args:
+            item_id: the item_id of the item to update
+            item: the data to use for the update
+        """
+        data_item_id = item_id
+        if isinstance(item_id, self.model):
+            if not item_id.id:  # type: ignore
+                data_item_id = item_id.temp_id  # type: ignore
+            else:
+                data_item_id = str(item_id.id)  # type: ignore
+
+        if isinstance(item_id, int):
+            data_item_id = str(item_id)
+
+        command_manager.add_command(data={'id': data_item_id, **item.dict(exclude={'id'}, exclude_none=True, exclude_defaults=True)},  # type: ignore
+                                    command_type='label_update', item=item_id, is_update_command=True)  # type: ignore
