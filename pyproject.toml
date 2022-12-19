@@ -29,6 +29,7 @@ packages = [{ include = "synctodoist" }]
 python = "^3.11"
 httpx = "^0.23.1"
 pydantic = "^1.10.2"
+mkdocstrings = "^0.19.1"
 
 
 [build-system]

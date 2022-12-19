@@ -1,15 +1,21 @@
-# Welcome to PyTodoist
+# Welcome to SyncTodoist
 
-## Commands
+SyncTodoist helps you interact with the Todoist Sync API v9 in Python. To find out more about the Todoist API, please, visit
+[developer.todoist.com](developer.todoist.com).
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+## Design Principles
 
-## Project layout
+This package was designed with the following principles in mind:
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+1. Data is moved around as a Pydantic data model
+2. The API should follow the REST API as closely as possible, only deviating where it is necessary due to the different nature of the Sync API.
+3. It follows modern Python design concepts, e.g. careful type annotation everywhere.
+
+## Disclaimer
+
+This package is not created by, affiliated with, or supported by Doist.
+
+## Privacy Policy
+
+This site does not collect any personal data about you. It do not use cookies, tracking or anything similar. The sole purpose of this site is to provide a
+documentation for the `synctodoist` package.

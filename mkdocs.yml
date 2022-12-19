@@ -1,3 +1,18 @@
 site_name: SyncTodoist Docs
 theme:
-  name: material
+    name: material
+
+plugins:
+    - mkdocstrings
+
+nav:
+    -   Welcome: index.md
+    -   Tutorial: tutorials
+    -   How-To Guide: how-tos
+    -   Reference:
+            -   Overview: reference/index.md
+            -   TodoistAPI: reference/todoist_api.md
+            -   Managers: reference/managers.md
+            -   Models: reference/models.md
+            -   Exceptions: reference/exceptions.md
+    -   Explanation: explanation
