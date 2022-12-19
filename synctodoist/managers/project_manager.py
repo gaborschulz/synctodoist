@@ -26,7 +26,7 @@ class ProjectManager(BaseManager[Project]):
                 item_id = int(item_id)
 
             data = {'project_id': item_id, 'all_data': False}
-            result = command_manager.post(data, endpoint, self._api.api_key)
+            result = command_manager.post(data, endpoint)
             project = Project(**result['project'])
             self._items.update({str(project.id): project})
             return project

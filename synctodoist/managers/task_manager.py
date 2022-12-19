@@ -28,7 +28,7 @@ class TaskManager(BaseManager[Task]):
                 item_id = int(item_id)
 
             data = {'item_id': item_id}
-            result = command_manager.post(data, endpoint, self._api.api_key)
+            result = command_manager.post(data, endpoint)
             task = Task(**result.get('item'))
             self._items.update({task.id: task})  # type: ignore
             return task

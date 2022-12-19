@@ -2,16 +2,14 @@ from __future__ import annotations
 
 import json
 import re
-import tempfile
-from pathlib import Path
 from typing import Iterable, Any, TYPE_CHECKING, TypeVar, Generic, Type
 
 from synctodoist.exceptions import TodoistError
 from synctodoist.managers import command_manager
-from synctodoist.models import TodoistBaseModel
+from synctodoist.models import TodoistBaseModel, Settings
 
 if TYPE_CHECKING:
-    from synctodoist.todoist_api import TodoistAPI
+    pass
 
 DataT = TypeVar('DataT', bound=TodoistBaseModel)
 
@@ -21,12 +19,8 @@ class BaseManager(Generic[DataT]):
     _items: dict[str, DataT] = {}
     model: Type[DataT]
 
-    def __init__(self, api: TodoistAPI, cache_dir: Path | str | None = None):
-        self._api: TodoistAPI = api
-        if not cache_dir:
-            cache_dir = tempfile.gettempdir()
-
-        self._cache_dir = cache_dir if isinstance(cache_dir, Path) else Path(cache_dir)
+    def __init__(self, settings: Settings):
+        self.settings = settings
 
     # Pass-through to dict
     def get(self, __key: str, default: Any) -> DataT | None:
@@ -80,9 +74,6 @@ class BaseManager(Generic[DataT]):
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        if not self._api.synced:
-            raise TodoistError('Run .sync() before you try to find a project based on a pattern')
-
         items: list[DataT] = []
         compiled_pattern = re.compile(pattern=pattern)
         for item in self._items.values():
@@ -93,7 +84,7 @@ class BaseManager(Generic[DataT]):
                 items.append(item)
 
         if not return_all:
-            raise TodoistError(f'Project matching pattern {pattern} not found')
+            raise TodoistError(f'Project matching pattern {pattern} not found. Run .sync() before you try to find a project based on a pattern.')
 
         return items
 
@@ -117,7 +108,7 @@ class BaseManager(Generic[DataT]):
 
     def read_cache(self):
         """Read cached data"""
-        cache_file = self._cache_dir / f'todoist_{self.model.Config.cache_label}.json'
+        cache_file = self.settings.cache_dir / f'todoist_{self.model.Config.cache_label}.json'
         if not cache_file.exists():
             return
 
@@ -128,7 +119,7 @@ class BaseManager(Generic[DataT]):
 
     def write_cache(self):
         """Write data to cache"""
-        cache_file = self._cache_dir / f'todoist_{self.model.Config.cache_label}.json'
+        cache_file = self.settings.cache_dir / f'todoist_{self.model.Config.cache_label}.json'
         cache = {
             'name': self.model.Config.cache_label,
             'data': {key: value.dict(exclude_none=True) for key, value in self._items.items()}
@@ -166,7 +157,6 @@ class BaseManager(Generic[DataT]):
 
     def _extract_params(self, item: str | int | DataT) -> tuple[dict[str, Any], str]:
         params: dict[str, Any] = {}
-        item_id: str = ''
         match item:
             case self.model():
                 params['item'] = item

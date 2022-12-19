@@ -1,28 +1,25 @@
 # pylint: disable-all
-import os
 from datetime import datetime
 from random import randint
 
 import pytest
-from dotenv import load_dotenv
 
 from synctodoist import TodoistAPI
 from synctodoist.managers import command_manager
-from synctodoist.models import Task, Due, Project, Label, Section, Reminder, ReminderTypeEnum
-
-load_dotenv()
-API_KEY = os.environ.get('TODOIST_API')
+from synctodoist.models import Task, Due, Project, Label, Section, Reminder, ReminderTypeEnum, Settings
 
 
 @pytest.fixture()
 def todoist():
-    todoist = TodoistAPI(api_key=API_KEY)
+    settings = Settings(_env_file='../.env')
+    todoist = TodoistAPI(settings=settings)
     return todoist
 
 
 @pytest.fixture(scope='session')
 def synced_todoist():
-    todoist = TodoistAPI(api_key=API_KEY)
+    settings = Settings(_env_file='../.env')
+    todoist = TodoistAPI(settings=settings)
     todoist.sync()
     return todoist
 

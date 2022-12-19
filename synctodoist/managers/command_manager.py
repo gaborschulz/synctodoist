@@ -1,14 +1,12 @@
 # pylint: disable=invalid-name
 import json
-import tempfile
 import uuid
-from pathlib import Path
 from typing import Any
 
 import httpx
 
 from synctodoist.exceptions import TodoistError
-from synctodoist.models import Command, TodoistBaseModel
+from synctodoist.models import Command, TodoistBaseModel, Settings
 
 BASE_URL = 'https://api.todoist.com/sync/v9'
 
@@ -19,7 +17,7 @@ _headers = {
 commands: dict[str, Command] = {}
 temp_items: dict[str, TodoistBaseModel] = {}
 SYNC_TOKEN: str = '*'
-cache_dir = Path(tempfile.gettempdir())
+settings: Settings = Settings()
 full_sync_count = 0
 partial_sync_count = 0
 
@@ -55,12 +53,12 @@ def _build_request_data(data: Any) -> dict:
     return result
 
 
-def post(data: dict, endpoint: str, api_key: str) -> Any:
+def post(data: dict, endpoint: str) -> Any:
     """Post data to Todoist"""
     global SYNC_TOKEN  # pylint: disable=global-statement
 
     url = f'{BASE_URL}/{endpoint}'
-    _headers.update({'Authorization': f'Bearer {api_key}'})
+    _headers.update({'Authorization': f'Bearer {settings.api_key}'})
 
     dataset = _build_request_data(data=data)
     response = httpx.post(url=url, data=dataset, headers=_headers)
@@ -72,10 +70,10 @@ def post(data: dict, endpoint: str, api_key: str) -> Any:
     return result
 
 
-def get(endpoint: str, api_key: str) -> Any:
+def get(endpoint: str) -> Any:
     """Get data from Todoist"""
     url = f'{BASE_URL}/{endpoint}'
-    _headers.update({'Authorization': f'Bearer {api_key}'})
+    _headers.update({'Authorization': f'Bearer {settings.api_key}'})
     with httpx.Client(headers=_headers) as client:
         response = client.get(url=url)
         response.raise_for_status()
@@ -88,14 +86,14 @@ def _update_item(command):
     command.item.refresh(**values)
 
 
-def commit(api_key: str) -> Any:
+def commit() -> Any:
     """Commit open commands to Todoist"""
     global full_sync_count  # pylint: disable=global-statement
     global partial_sync_count  # pylint: disable=global-statement
 
     endpoint = 'sync'
     data = {'commands': [command.dict(exclude_none=True, exclude_defaults=True) for command in commands.values()]}
-    result = post(data, endpoint, api_key)
+    result = post(data, endpoint)
 
     if result.get('full_sync', False):
         full_sync_count += 1
@@ -104,10 +102,10 @@ def commit(api_key: str) -> Any:
 
     errors = []
     for key, value in result['sync_status'].items():
+        command = commands.pop(key)
         if 'error' in value:
             errors.append({key: value})
         if value == 'ok':
-            command = commands.pop(key)
             if command.item and command.is_update_command:
                 _update_item(command)
 
@@ -124,14 +122,14 @@ def commit(api_key: str) -> Any:
 
 def write_sync_token():
     """Store the sync token"""
-    with (cache_dir / 'todoist_sync_token.json').open('w', encoding='utf-8') as cache_fp:
+    with (settings.cache_dir / 'todoist_sync_token.json').open('w', encoding='utf-8') as cache_fp:
         json.dump({'sync_token': SYNC_TOKEN}, cache_fp)
 
 
 def read_sync_token():
     """Load the sync token"""
     global SYNC_TOKEN  # pylint: disable=global-statement
-    cache_file = cache_dir / 'todoist_sync_token.json'
+    cache_file = settings.cache_dir / 'todoist_sync_token.json'
     if not cache_file.exists():
         SYNC_TOKEN = '*'  # nosec
         return

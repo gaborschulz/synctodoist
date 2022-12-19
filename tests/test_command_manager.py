@@ -16,6 +16,6 @@ def test_invalid_command_commit_error():
     assert len(command_manager.commands) > 0
 
     with pytest.raises(TodoistError):
-        command_manager.commit(api_key=API_KEY)
+        command_manager.commit()
 
     command_manager.commands.clear()

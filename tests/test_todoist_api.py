@@ -1,14 +1,9 @@
 # pylint: disable-all
-import os
 from pathlib import Path
-
-from dotenv import load_dotenv
 
 from synctodoist import TodoistAPI
 from synctodoist.managers import command_manager
-
-load_dotenv()
-API_KEY = os.environ.get('TODOIST_API')
+from synctodoist.models import Settings
 
 
 def test_sync(todoist):
@@ -27,5 +22,12 @@ def test_get_stats(todoist):
 
 
 def test_sync_custom_cache_path():
-    api = TodoistAPI(api_key=API_KEY, cache_dir=Path.home())
-    assert command_manager.cache_dir == Path.home()
+    settings = Settings(cache_dir=Path.home())
+    api = TodoistAPI(settings=settings)
+    assert command_manager.settings.cache_dir == Path.home()
+
+
+def test_settings_populated_from_kwargs():
+    api = TodoistAPI(api_key='Test', cache_dir=Path.home())
+    assert api.settings.api_key == 'Test'
+    assert api.settings.cache_dir == Path.home()

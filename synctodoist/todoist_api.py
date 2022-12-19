@@ -1,9 +1,8 @@
-from pathlib import Path
 from typing import Any
 
 from synctodoist.exceptions import TodoistError
 from synctodoist.managers import ProjectManager, command_manager, TaskManager, LabelManager, SectionManager, ReminderManager
-from synctodoist.models import Task, Project, Label, Section, TodoistBaseModel, Reminder
+from synctodoist.models import Task, Project, Label, Section, TodoistBaseModel, Reminder, Settings
 
 CACHE_MAPPING = {x.Config.cache_label: x for x in TodoistBaseModel.__subclasses__()}
 RESOURCE_TYPES = [x.Config.todoist_resource_type for x in TodoistBaseModel.__subclasses__()]
@@ -12,17 +11,20 @@ RESOURCE_TYPES = [x.Config.todoist_resource_type for x in TodoistBaseModel.__sub
 class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     """Todoist API class for the new Sync v9 API"""
 
-    def __init__(self, api_key: str, cache_dir: Path | str | None = None):
-        self.api_key = api_key
-        self.synced = False
-        self.projects: ProjectManager = ProjectManager(api=self, cache_dir=cache_dir)
-        self.tasks: TaskManager = TaskManager(api=self, cache_dir=cache_dir)
-        self.labels: LabelManager = LabelManager(api=self, cache_dir=cache_dir)
-        self.sections: SectionManager = SectionManager(api=self, cache_dir=cache_dir)
-        self.reminders: ReminderManager = ReminderManager(api=self, cache_dir=cache_dir)
+    def __init__(self, settings: Settings | None = None, **kwargs):
+        if settings:
+            self.settings = settings
+        else:
+            self.settings = Settings(**kwargs)
 
-        if cache_dir:
-            command_manager.cache_dir = cache_dir if isinstance(cache_dir, Path) else Path(cache_dir)
+        self.synced = False
+        self.projects: ProjectManager = ProjectManager(settings=self.settings)
+        self.tasks: TaskManager = TaskManager(settings=self.settings)
+        self.labels: LabelManager = LabelManager(settings=self.settings)
+        self.sections: SectionManager = SectionManager(settings=self.settings)
+        self.reminders: ReminderManager = ReminderManager(settings=self.settings)
+
+        command_manager.settings = self.settings
 
     # region PRIVATE METHODS
 
@@ -54,7 +56,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
     def commit(self) -> Any:
         """Commit open commands to Todoist"""
-        result = command_manager.commit(self.api_key)
+        result = command_manager.commit()
 
         self.sync()
         return result
@@ -71,7 +73,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         self._read_all_caches()
 
         data = {'resource_types': RESOURCE_TYPES}
-        result = command_manager.post(data, 'sync', self.api_key)
+        result = command_manager.post(data, 'sync')
 
         for key in CACHE_MAPPING:
             target = getattr(self, key)
@@ -452,18 +454,15 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A dict with all user stats
         """
-        return command_manager.get('completed/get_stats', self.api_key)
+        return command_manager.get('completed/get_stats')
     # endregion
     # endregion
 
 
 if __name__ == '__main__':  # pragma: no cover
-    import os
-    from dotenv import load_dotenv
 
-    load_dotenv()
-    apikey_: str = os.environ.get('TODOIST_API')  # type: ignore
-    todoist_ = TodoistAPI(api_key=apikey_)
+    settings_ = Settings(_env_file='../.env')
+    todoist_ = TodoistAPI(settings=settings_)
     todoist_.sync()
     # section = todoist_.get_section(section_id=108544882)
     # print(section)
