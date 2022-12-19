@@ -23,7 +23,7 @@ class BaseManager(Generic[DataT]):
         self.settings = settings
 
     # Pass-through to dict
-    def get(self, __key: str, default: Any) -> DataT | None:
+    def _get(self, __key: str, default: Any) -> DataT | None:
         """Get item by key"""
         return self._items.get(__key, default)
 
@@ -52,7 +52,7 @@ class BaseManager(Generic[DataT]):
         Returns:
             A TodoistBaseModel instance with all item details
         """
-        if item := self.get(str(item_id), None):
+        if item := self._get(str(item_id), None):
             return item
 
         if not hasattr(self.model.Config, 'api_get'):

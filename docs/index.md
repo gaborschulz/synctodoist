@@ -7,9 +7,12 @@ SyncTodoist helps you interact with the Todoist Sync API v9 in Python. To find o
 
 This package was designed with the following principles in mind:
 
-1. Data is moved around as a Pydantic data model
-2. The API should follow the REST API as closely as possible, only deviating where it is necessary due to the different nature of the Sync API.
-3. It follows modern Python design concepts, e.g. careful type annotation everywhere.
+1. **Pydantic everywhere**: Data is moved around as a Pydantic data model
+2. **Match the Todoist REST API**:The API should follow the REST API as closely as possible, only deviating where it is necessary due to the different nature of
+   the Sync API.
+3. **Modern Python**: It follows modern Python design concepts, e.g. careful type annotation everywhere.
+4. **Properly documented**: this documentation follows the Diátaxis model.
+5. **Thoroughly tested**: every part of the code is tested throroughly with unit tests and integration tests
 
 ## Disclaimer
 

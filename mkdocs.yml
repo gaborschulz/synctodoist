@@ -16,3 +16,12 @@ nav:
             -   Models: reference/models.md
             -   Exceptions: reference/exceptions.md
     -   Explanation: explanation
+
+extra:
+    consent:
+        title: Cookie consent
+        description: >-
+            This site does not use any cookies whatsoever. No tracking, no personal data collection, only plain documentation.
+
+copyright: >
+    Copyright &copy; 2022 Gabor Schulz – <a href="#__consent">Change cookie settings</a>
