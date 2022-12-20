@@ -34,7 +34,7 @@ def test_get_task_str_id(synced_todoist, task_added):
 
 
 def test_get_task_by_pattern(synced_todoist, task_added):
-    task = synced_todoist.get_task_by_pattern(pattern='fixture_task_added')
+    task = synced_todoist.find_task_by_pattern(pattern='fixture_task_added')
     assert 'fixture_task_added' in task.content
 
 
@@ -111,7 +111,7 @@ def test_delete_task_by_none(synced_todoist):
 
 
 def test_move_task_to_different_project(synced_todoist, task_added):
-    target_project = synced_todoist.get_project_by_pattern('Personal')
+    target_project = synced_todoist.find_project_by_pattern('Personal')
     assert task_added.project_id != target_project.id
     synced_todoist.move_task(task=task_added, project=target_project)
     synced_todoist.commit()

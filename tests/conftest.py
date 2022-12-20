@@ -26,7 +26,7 @@ def synced_todoist():
 
 @pytest.fixture(scope='session')
 def project_inbox(synced_todoist):
-    return synced_todoist.get_project_by_pattern('Inbox')
+    return synced_todoist.find_project_by_pattern('Inbox')
 
 
 @pytest.fixture

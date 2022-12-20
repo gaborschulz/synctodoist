@@ -31,12 +31,12 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     def _write_all_caches(self):
         for key in CACHE_MAPPING:
             target = getattr(self, key)
-            target.write_cache()
+            target._write_cache()  # pylint: disable=protected-access
 
     def _read_all_caches(self):
         for key in CACHE_MAPPING:
             target = getattr(self, key)
-            target.read_cache()
+            target._read_cache()  # pylint: disable=protected-access
 
     # endregion
 
@@ -79,9 +79,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
             target = getattr(self, key)
             model = CACHE_MAPPING[key]
             # Add new items
-            target.update_dict({x['id']: model(**x) for x in result[model.Config.todoist_resource_type]})
+            target._dict_update({x['id']: model(**x) for x in result[model.Config.todoist_resource_type]})  # pylint: disable=protected-access
             # Remove deleted items
-            target.remove_deleted(result[model.Config.todoist_resource_type], result['full_sync'])
+            target._remove_deleted(result[model.Config.todoist_resource_type], result['full_sync'])  # pylint: disable=protected-access
 
         self._write_all_caches()
         command_manager.write_sync_token()
@@ -118,18 +118,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         else:
             raise TodoistError('Either label or label_id has to be provided')
 
-    def get_label(self, label_id: int | str) -> Label | None:
-        """Get label by id
-
-        Args:
-            label_id: the id of the label
-
-        Returns:
-            A Label instance with all project details
-        """
-        return self.labels.get_by_id(item_id=label_id)  # type: ignore
-
-    def get_label_by_pattern(self, pattern: str, return_all: bool = False) -> Label | list[Label]:
+    def find_label_by_pattern(self, pattern: str, return_all: bool = False) -> Label | list[Label]:
         """Get a label if its name matches a regex pattern
 
         Args:
@@ -141,7 +130,18 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.labels.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
+        return self.labels.find_by_pattern(pattern=pattern, field='name', return_all=return_all)
+
+    def get_label(self, label_id: int | str) -> Label | None:
+        """Get label by id
+
+        Args:
+            label_id: the id of the label
+
+        Returns:
+            A Label instance with all project details
+        """
+        return self.labels.get_by_id(item_id=label_id)  # type: ignore
 
     def update_label(self, label_id: int | str | Label, label: Label):
         """
@@ -182,19 +182,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         else:
             raise TodoistError('Either project or project_id has to be provided')
 
-    def get_project(self, project_id: int | str) -> Project:
-        """Get project by id
-
-        This is convenience wrapper for TodoistAPI.projects.get_by_id(project_id)
-        Args:
-            project_id: the id of the project
-
-        Returns:
-            A Project instance with all project details
-        """
-        return self.projects.get_by_id(item_id=project_id)
-
-    def get_project_by_pattern(self, pattern: str, return_all: bool = False) -> Project | list[Project]:
+    def find_project_by_pattern(self, pattern: str, return_all: bool = False) -> Project | list[Project]:
         """Get a project if its name matches a regex pattern
 
         Args:
@@ -206,7 +194,19 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.projects.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
+        return self.projects.find_by_pattern(pattern=pattern, field='name', return_all=return_all)
+
+    def get_project(self, project_id: int | str) -> Project:
+        """Get project by id
+
+        This is convenience wrapper for TodoistAPI.projects.get_by_id(project_id)
+        Args:
+            project_id: the id of the project
+
+        Returns:
+            A Project instance with all project details
+        """
+        return self.projects.get_by_id(item_id=project_id)
 
     def update_project(self, project_id: int | str | Project, project: Project):
         """
@@ -297,18 +297,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         else:
             raise TodoistError('Either section or section_id has to be provided')
 
-    def get_section(self, section_id: int | str) -> Section | None:
-        """Get section by id
-
-        Args:
-            section_id: the id of the section
-
-        Returns:
-            A Section instance with all project details
-        """
-        return self.sections.get_by_id(item_id=section_id)
-
-    def get_section_by_pattern(self, pattern: str, return_all: bool = False) -> Section | list[Section]:
+    def find_section_by_pattern(self, pattern: str, return_all: bool = False) -> Section | list[Section]:
         """Get a section if its name matches a regex pattern
 
         Args:
@@ -320,7 +309,18 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.sections.get_by_pattern(pattern=pattern, field='name', return_all=return_all)
+        return self.sections.find_by_pattern(pattern=pattern, field='name', return_all=return_all)
+
+    def get_section(self, section_id: int | str) -> Section | None:
+        """Get section by id
+
+        Args:
+            section_id: the id of the section
+
+        Returns:
+            A Section instance with all project details
+        """
+        return self.sections.get_by_id(item_id=section_id)
 
     def update_section(self, section_id: int | str | Section, section: Section):
         """
@@ -377,18 +377,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         else:
             raise TodoistError('Either task or task_id has to be provided')
 
-    def get_task(self, task_id: int | str) -> Task:
-        """Get task by id
-
-        Args:
-            task_id: the id of the task
-
-        Returns:
-            A Task instance with all task details
-        """
-        return self.tasks.get_by_id(item_id=task_id)
-
-    def get_task_by_pattern(self, pattern: str, return_all: bool = False) -> Task | list[Task]:
+    def find_task_by_pattern(self, pattern: str, return_all: bool = False) -> Task | list[Task]:
         """Get a project if its name matches a regex pattern
 
         Args:
@@ -400,7 +389,18 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.tasks.get_by_pattern(pattern=pattern, field='content', return_all=return_all)
+        return self.tasks.find_by_pattern(pattern=pattern, field='content', return_all=return_all)
+
+    def get_task(self, task_id: int | str) -> Task:
+        """Get task by id
+
+        Args:
+            task_id: the id of the task
+
+        Returns:
+            A Task instance with all task details
+        """
+        return self.tasks.get_by_id(item_id=task_id)
 
     def move_task(self, task: Task, parent: str | int | Task | None = None, section: str | int | Section | None = None,
                   project: str | int | Project | None = None) -> None:

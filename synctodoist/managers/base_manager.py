@@ -16,26 +16,27 @@ DataT = TypeVar('DataT', bound=TodoistBaseModel)
 
 class BaseManager(Generic[DataT]):
     """Base manager"""
-    _items: dict[str, DataT] = {}
+    _items: dict[str, DataT]
     model: Type[DataT]
 
     def __init__(self, settings: Settings):
+        self._items = {}
         self.settings = settings
 
     # Pass-through to dict
-    def _get(self, __key: str, default: Any) -> DataT | None:
+    def _dict_get(self, __key: str, default: Any) -> DataT | None:
         """Get item by key"""
         return self._items.get(__key, default)
 
-    def update_dict(self, _m: dict[str, DataT], **kwargs) -> None:
+    def _dict_update(self, _m: dict[str, DataT], **kwargs) -> None:
         """Update projects"""
         return self._items.update(_m, **kwargs)
 
-    def values(self) -> Iterable[DataT]:
+    def _dict_values(self) -> Iterable[DataT]:
         """Get values"""
         return self._items.values()
 
-    def items(self):
+    def _dict_items(self):
         """Get key-value pairs"""
         return self._items.items()
 
@@ -52,7 +53,7 @@ class BaseManager(Generic[DataT]):
         Returns:
             A TodoistBaseModel instance with all item details
         """
-        if item := self._get(str(item_id), None):
+        if item := self._dict_get(str(item_id), None):
             return item
 
         if not hasattr(self.model.Config, 'api_get'):
@@ -60,7 +61,7 @@ class BaseManager(Generic[DataT]):
 
         return None
 
-    def get_by_pattern(self, pattern: str, field: str = 'name', return_all: bool = False) -> DataT | list[DataT]:
+    def find_by_pattern(self, pattern: str, field: str = 'name', return_all: bool = False) -> DataT | list[DataT]:
         """Get an item if its field matches a regex pattern
 
         Args:
@@ -88,7 +89,7 @@ class BaseManager(Generic[DataT]):
 
         return items
 
-    def remove_deleted(self, received: list[Any], full_sync: bool = False):
+    def _remove_deleted(self, received: list[Any], full_sync: bool = False):
         """Remove deleted items"""
         received_keys = {x['id'] for x in received}
         result: dict[str, DataT] = {}
@@ -106,7 +107,7 @@ class BaseManager(Generic[DataT]):
         """Add new item to command_manager queue"""
         command_manager.add_command(data=item.dict(exclude_none=True, exclude_defaults=True), command_type=self.model.Config.command_add, item=item)
 
-    def read_cache(self):
+    def _read_cache(self):
         """Read cached data"""
         cache_file = self.settings.cache_dir / f'todoist_{self.model.Config.cache_label}.json'
         if not cache_file.exists():
@@ -117,7 +118,7 @@ class BaseManager(Generic[DataT]):
 
         self._items = {key: self.model(**value) for key, value in cache['data'].items()}
 
-    def write_cache(self):
+    def _write_cache(self):
         """Write data to cache"""
         cache_file = self.settings.cache_dir / f'todoist_{self.model.Config.cache_label}.json'
         cache = {

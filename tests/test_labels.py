@@ -16,7 +16,7 @@ def test_get_label_str_id(synced_todoist, label_added):
 
 
 def test_get_label_by_pattern(synced_todoist, label_added):
-    label = synced_todoist.get_label_by_pattern(pattern='fixture_label_added')
+    label = synced_todoist.find_label_by_pattern(pattern='fixture_label_added')
     assert 'fixture_label_added' in label.name
 
 
