@@ -3,19 +3,25 @@ theme:
     name: material
 
 plugins:
-    - mkdocstrings
-
+    -   mkdocstrings:
+            handlers:
+                python:
+                    options:
+                        show_root_toc_entry: false
+                        show_source: false
+                        heading_level: 3
+                        filters: [ "!Config" ]
 nav:
     -   Welcome: index.md
-    -   Tutorial: tutorials
-    -   How-To Guide: how-tos
+    -   Tutorial: tutorials/index.md
+    -   How-To Guide: how-tos/index.md
     -   Reference:
             -   Overview: reference/index.md
             -   TodoistAPI: reference/todoist_api.md
             -   Managers: reference/managers.md
             -   Models: reference/models.md
             -   Exceptions: reference/exceptions.md
-    -   Explanation: explanation
+    -   Explanation: explanation/index.md
 
 extra:
     consent:

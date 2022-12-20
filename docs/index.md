@@ -12,7 +12,7 @@ This package was designed with the following principles in mind:
    the Sync API.
 3. **Modern Python**: It follows modern Python design concepts, e.g. careful type annotation everywhere.
 4. **Properly documented**: this documentation follows the Diátaxis model.
-5. **Thoroughly tested**: every part of the code is tested throroughly with unit tests and integration tests
+5. **Thoroughly tested**: every part of the code is tested thoroughly with unit tests and integration tests
 
 ## Disclaimer
 
