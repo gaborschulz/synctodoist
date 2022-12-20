@@ -17,13 +17,10 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
         The `Settings` model will try to infer your settings from environment variables, and you can configure it to use Docker secrets inside containers.
         For more details, please, check the documentation of the `Settings` model.
 
-        Args:
-            settings: an instance of the `Settings` class
-            **kwargs: keyword arguments that should be passed on to the `Settings` object. These will be passed on only if the `settings` argument is not provided.
-
         Examples:
             >>> from synctodoist import TodoistAPI
             >>> api = TodoistAPI()
+
 
             or
 
@@ -33,8 +30,13 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
             >>> api = TodoistAPI(settings=settings)
 
             or
+
             >>> from synctodoist import TodoistAPI
             >>> api = TodoistAPI(api_key="...", cache_dir="...")
+
+        Args:
+            settings: an instance of the `Settings` class
+            **kwargs: keyword arguments that should be passed on to the `Settings` object. These will be passed on only if the `settings` argument is not provided.
         """
         if settings:
             self.settings = settings
@@ -100,16 +102,16 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
     def sync(self, full_sync: bool = False) -> bool:
         """Synchronize with Todoist API
 
+        Examples:
+            >>> from synctodoist import TodoistAPI
+            >>> api = TodoistAPI()
+            >>> api.sync()
+
         Args:
             full_sync: Set to `True` if you would like to perform a full synchronization, or `False` if you prefer a partial sync.
 
         Returns:
             `True` if a full sync was performed, `False` otherwise
-
-        Examples:
-            >>> from synctodoist import TodoistAPI
-            >>> api = TodoistAPI()
-            >>> api.sync()
 
         Raises:
             TodoistError: if the synchronization fails
@@ -447,11 +449,15 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
     def delete_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Delete a task
 
+        Important:
+            Either the `task_id` or the `task` must be provided. The `task` object takes priority over the `task_id` argument if both are provided.
+
         Args:
             task_id: the id of the task to delete
             task: the Task object to delete (keyword-only argument)
 
-        Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
+        Raises:
+            TodoistError: if neither `task_id` nor `task` are provided.
         """
         if task:
             self.tasks.delete(item=task)
@@ -497,7 +503,8 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
         """
         Move task to a different parent, section or project
 
-        One of the parameters has to be provided.
+        Important:
+            One of the parameters has to be provided.
 
         To move an item from a section to no section, just use the project_id parameter, with the project it currently belongs to as a value.
 
@@ -506,17 +513,25 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
             parent: the parent under which you want to place the task
             section: the section in which you want to place the task
             project: the project in which you want to place the task
+
+        Raises:
+            TodoistError: if neither `parent`, `section` nor `project` are provided.
         """
         self.tasks.move(item=task, parent=parent, section=section, project=project)
 
     def reopen_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Reopen a task
 
-        Args:
-            task_id: the id of the task to reopen
-            task: the Task object to reopen (keyword-only argument)
+        Important:
+            Either the `task_id` or the `task` must be provided. The `task` object takes priority over the `task_id` argument if both are provided. `task` has
+            to be provided as a keyword argument.
 
-        Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
+        Args:
+            task_id: the id of the task to close
+            task: the Task object to close (keyword-only argument)
+
+        Raises:
+            TodoistError: if neither `task_id` nor `task` are provided.
         """
         if task:
             self.tasks.reopen(item=task)
@@ -527,7 +542,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
 
     def update_task(self, task_id: int | str | Task, task: Task):
         """
-        Update the label identified by task_id with the data from task
+        Update the label identified by `task_id` with the data from `task`
 
         Args:
             task_id: the task_id of the task to update
