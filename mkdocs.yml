@@ -1,6 +1,8 @@
 site_name: SyncTodoist Docs
 theme:
     name: material
+    features:
+        - navigation.sections
 
 plugins:
     -   mkdocstrings:
@@ -14,15 +16,17 @@ plugins:
                         merge_init_into_class: true
 nav:
     -   Welcome: index.md
-    -   Tutorial: tutorials/index.md
-    -   How-To Guide: how-tos/index.md
+    -   Tutorials:
+            -   Getting Started: tutorials/index.md
+    -   How-To Guides:
+            -   Settings & Configuration: how-tos/index.md
     -   Reference:
             -   Overview: reference/index.md
             -   TodoistAPI: reference/todoist_api.md
             -   Managers: reference/managers.md
             -   Models: reference/models.md
             -   Exceptions: reference/exceptions.md
-    -   Explanation: explanation/index.md
+    -   Explanations: explanation/index.md
 
 extra:
     consent:

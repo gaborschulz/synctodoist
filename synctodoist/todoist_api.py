@@ -155,11 +155,15 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
     def delete_label(self, label_id: int | str | None = None, *, label: Label | None = None) -> None:
         """Delete a label
 
+        Important:
+            Either the `label_id` or the `label` must be provided. The `label` object takes priority over the `label_id` argument if both are provided.
+
         Args:
             label_id: the id of the label to delete
             label: the Label object to delete (keyword-only argument)
 
-        Either the label_id or the label must be provided. The label object takes priority over the label_id argument if both are provided
+        Raises:
+            TodoistError: if neither `label_id` nor `label` are provided.
         """
         if label:
             self.labels.delete(item=label)
@@ -189,11 +193,14 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
     def get_label(self, label_id: int | str) -> Label | None:
         """Get label by id
 
+        Note:
+            This is convenience wrapper for TodoistAPI.labels.get(label_id)
+
         Args:
             label_id: the id of the label
 
         Returns:
-            A Label instance with all project details
+            A `Label` instance with all project details
 
         Raises:
             TodoistError: if `label_id` is not found
@@ -227,11 +234,15 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
     def delete_project(self, project_id: int | str | None = None, *, project: Project | None = None) -> None:
         """Delete a project
 
+        Important:
+            Either the `project_id` or the `project` must be provided. The `project` object takes priority over the `project_id` argument if both are provided.
+
         Args:
             project_id: the id of the project to delete
             project: the Project object to delete (keyword-only argument)
 
-        Either the project_id or the project must be provided. The project object takes priority over the project_id argument if both are provided
+        Raises:
+            TodoistError: if neither `project_id` nor `project` are provided.
         """
         if project:
             self.projects.delete(item=project)
@@ -268,7 +279,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
             project_id: the id of the project
 
         Returns:
-            A Project instance with all project details
+            A `Project` instance with all project details
 
         Raises:
             TodoistError: if `project_id` is not found
@@ -302,11 +313,15 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
     def delete_reminder(self, reminder_id: int | str | None = None, *, reminder: Reminder | None = None) -> None:
         """Delete a reminder
 
+        Important:
+            Either the `reminder_id` or the `reminder` must be provided. The `reminder` object takes priority over the `reminder_id` argument if both are provided.
+
         Args:
             reminder_id: the id of the reminder to delete
             reminder: the Reminder object to delete (keyword-only argument)
 
-        Either the reminder_id or the reminder must be provided. The reminder object takes priority over the reminder_id argument if both are provided
+        Raises:
+            TodoistError: if neither `reminder_id` nor `reminder` are provided.
         """
         if reminder:
             self.reminders.delete(item=reminder)
@@ -317,6 +332,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
 
     def get_reminder(self, reminder_id: int | str) -> Reminder | None:
         """Get reminder by id
+
+        Note:
+            This is convenience wrapper for TodoistAPI.reminders.get(reminder_id)
 
         Args:
             reminder_id: the id of the reminder
@@ -349,18 +367,22 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
             This is a convenience wrapper for `TodoistAPI.add(item=section)`.
 
         Args:
-            section: a Section instance to add to Todoist
+            section: a `Section` instance to add to Todoist
         """
         self.add(section)
 
     def delete_section(self, section_id: int | str | None = None, *, section: Section | None = None) -> None:
         """Delete a section
 
+        Important:
+            Either the `section_id` or the `section` must be provided. The `section` object takes priority over the `section_id` argument if both are provided.
+
         Args:
             section_id: the id of the section to delete
             section: the Section object to delete (keyword-only argument)
 
-        Either the section_id or the section must be provided. The section object takes priority over the section_id argument if both are provided
+        Raises:
+            TodoistError: if neither `section_id` nor `section` are provided.
         """
         if section:
             self.sections.delete(item=section)
@@ -390,11 +412,14 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
     def get_section(self, section_id: int | str) -> Section | None:
         """Get section by id
 
+        Note:
+            This is convenience wrapper for TodoistAPI.sections.get(project_id)
+
         Args:
             section_id: the id of the section
 
         Returns:
-            A Section instance with all project details
+            A `Section` instance with all project details
 
         Raises:
             TodoistError: if `section_id` is not found
@@ -487,6 +512,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
     def get_task(self, task_id: int | str) -> Task:
         """Get task by id
 
+        Note:
+            This is convenience wrapper for TodoistAPI.tasks.get(project_id)
+
         Args:
             task_id: the id of the task
 
@@ -553,13 +581,13 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
     # endregion
 
     # region User methods
-    def get_stats(self) -> Any:
+    def get_stats(self) -> dict:
         """Get Todoist usage statistics
 
         Returns:
             A dict with all user stats
         """
-        return command_manager.get('completed/get_stats')
+        return command_manager.get('completed/get_stats')  # type: ignore
     # endregion
     # endregion
 

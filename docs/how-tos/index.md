@@ -1,1 +1,1 @@
-# How-To Guide
+# Settings & Configuration
