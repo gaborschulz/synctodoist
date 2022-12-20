@@ -8,10 +8,34 @@ CACHE_MAPPING = {x.Config.cache_label: x for x in TodoistBaseModel.__subclasses_
 RESOURCE_TYPES = [x.Config.todoist_resource_type for x in TodoistBaseModel.__subclasses__()]
 
 
-class TodoistAPI:  # pylint: disable=too-many-instance-attributes
-    """Todoist API class for the new Sync v9 API"""
-
+class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-docstring,line-too-long
     def __init__(self, settings: Settings | None = None, **kwargs):
+        """
+        You can initialize TodoistAPI in two ways: either with a `Settings` object in the settings argument, or you can provide your settings as arguments to
+        the initializer. These will be passed on directly to the initializer of the `Settings` object.
+
+        The `Settings` model will try to infer your settings from environment variables, and you can configure it to use Docker secrets inside containers.
+        For more details, please, check the documentation of the `Settings` model.
+
+        Args:
+            settings: an instance of the `Settings` class
+            **kwargs: keyword arguments that should be passed on to the `Settings` object. These will be passed on only if the `settings` argument is not provided.
+
+        Examples:
+            >>> from synctodoist import TodoistAPI
+            >>> api = TodoistAPI()
+
+            or
+
+            >>> from synctodoist import TodoistAPI
+            >>> from synctodoist.models import Settings
+            >>> settings = Settings(...)
+            >>> api = TodoistAPI(settings=settings)
+
+            or
+            >>> from synctodoist import TodoistAPI
+            >>> api = TodoistAPI(api_key="...", cache_dir="...")
+        """
         if settings:
             self.settings = settings
         else:
@@ -43,10 +67,10 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     # region PUBLIC METHODS
     # region Global methods
     def add(self, item: TodoistBaseModel) -> None:
-        """Add new task to todoist
+        """Add new item (any subclass of `TodoistBaseModel`) to Todoist
 
         Args:
-            item: a TodoistBaseModel instance to add to Todoist
+            item: a instance of a TodoistBaseModel subclass that you would like to submit to Todoist
         """
         # type: ignore
         model = type(item)
@@ -55,7 +79,19 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         model_manager.add(item=item)
 
     def commit(self) -> Any:
-        """Commit open commands to Todoist"""
+        """Commit open commands to Todoist.
+
+        Commands are processed in batches to be frugal with the request limits defined by the Todoist API (check
+        [Limits](https://developer.todoist.com/sync/v9/#request-limits) in the Todoist developer documentation for more details).
+
+        Examples:
+            >>> from synctodoist import TodoistAPI
+            >>> api = TodoistAPI()
+            >>> api.commit()
+
+        Raises:
+            TodoistError: if the Todoist Sync API responds with an error to your request.
+        """
         result = command_manager.commit()
 
         self.sync()
@@ -64,8 +100,19 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     def sync(self, full_sync: bool = False) -> bool:
         """Synchronize with Todoist API
 
+        Args:
+            full_sync: Set to `True` if you would like to perform a full synchronization, or `False` if you prefer a partial sync.
+
         Returns:
-            True if a full sync was performed, false otherwise
+            `True` if a full sync was performed, `False` otherwise
+
+        Examples:
+            >>> from synctodoist import TodoistAPI
+            >>> api = TodoistAPI()
+            >>> api.sync()
+
+        Raises:
+            TodoistError: if the synchronization fails
         """
         if not full_sync:
             command_manager.read_sync_token()
@@ -95,7 +142,8 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     def add_label(self, label: Label) -> None:
         """Add new label to todoist.
 
-        This is a convenience method for TodoistAPI.add(item=label).
+        Note:
+            This is a convenience wrapper for `TodoistAPI.add(item=label)`.
 
         Args:
             label: a Label instance to add to Todoist
@@ -118,17 +166,21 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         else:
             raise TodoistError('Either label or label_id has to be provided')
 
-    def find_label_by_pattern(self, pattern: str, return_all: bool = False) -> Label | list[Label]:
-        """Get a label if its name matches a regex pattern
+    def find_label(self, pattern: str, return_all: bool = False) -> Label | list[Label]:
+        """Find labels based on a regex pattern.
+
+        Important:
+            You have to run the `.sync()` method first for this to work
 
         Args:
             pattern: the regex pattern against which the label's name is matched
             return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
 
         Returns:
-            A Label instance containing the project details
+            A `Label` instance containing the label details, or a list of `Label` instances if `return_all` was set to `True`
 
-        IMPORTANT: You have to run the .sync() method first for this to work
+        Raises:
+            TodoistError: if `return_all=False` and no matching value is found
         """
         return self.labels.find(pattern=pattern, field='name', return_all=return_all)
 
@@ -140,6 +192,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Returns:
             A Label instance with all project details
+
+        Raises:
+            TodoistError: if `label_id` is not found
         """
         return self.labels.get(item_id=label_id)  # type: ignore
 
@@ -159,7 +214,8 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     def add_project(self, project: Project) -> None:
         """Add new project to todoist.
 
-        This is a convenience method for TodoistAPI.add(item=project).
+        Note:
+            This is a convenience wrapper for `TodoistAPI.add(item=project)`.
 
         Args:
             project: a Project instance to add to Todoist
@@ -182,29 +238,38 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         else:
             raise TodoistError('Either project or project_id has to be provided')
 
-    def find_project_by_pattern(self, pattern: str, return_all: bool = False) -> Project | list[Project]:
-        """Get a project if its name matches a regex pattern
+    def find_project(self, pattern: str, return_all: bool = False) -> Project | list[Project]:
+        """Find projects based on a regex pattern
+
+        Important:
+            You have to run the `.sync()` method first for this to work
 
         Args:
             pattern: the regex pattern against which the project's name is matched
             return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
 
         Returns:
-            A Project instance containing the project details
+            A `Project` instance containing the project details, or a list of `Project` instances if `return_all` was set to `True`
 
-        IMPORTANT: You have to run the .sync() method first for this to work
+        Raises:
+            TodoistError: if `return_all=False` and no matching value is found
         """
         return self.projects.find(pattern=pattern, field='name', return_all=return_all)
 
     def get_project(self, project_id: int | str) -> Project:
         """Get project by id
 
-        This is convenience wrapper for TodoistAPI.projects.get_by_id(project_id)
+        Note:
+            This is convenience wrapper for TodoistAPI.projects.get(project_id)
+
         Args:
             project_id: the id of the project
 
         Returns:
             A Project instance with all project details
+
+        Raises:
+            TodoistError: if `project_id` is not found
         """
         return self.projects.get(item_id=project_id)
 
@@ -224,7 +289,8 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     def add_reminder(self, reminder: Reminder) -> None:
         """Add new reminder to todoist.
 
-        This is a convenience method for TodoistAPI.add(item=reminder).
+        Note:
+            This is a convenience wrapper for `TodoistAPI.add(item=reminder)`.
 
         Args:
             reminder: a Reminder instance to add to Todoist
@@ -255,6 +321,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Returns:
             A Reminder instance with all project details
+
+        Raises:
+            TodoistError: if `reminder_id` is not found
         """
         return self.reminders.get(item_id=reminder_id)  # type: ignore
 
@@ -274,7 +343,8 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     def add_section(self, section: Section) -> None:
         """Add new section to todoist.
 
-        This is a convenience method for TodoistAPI.add(item=section).
+        Note:
+            This is a convenience wrapper for `TodoistAPI.add(item=section)`.
 
         Args:
             section: a Section instance to add to Todoist
@@ -297,17 +367,21 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         else:
             raise TodoistError('Either section or section_id has to be provided')
 
-    def find_section_by_pattern(self, pattern: str, return_all: bool = False) -> Section | list[Section]:
-        """Get a section if its name matches a regex pattern
+    def find_section(self, pattern: str, return_all: bool = False) -> Section | list[Section]:
+        """Find sections based on a regex pattern.
+
+        Important:
+            You have to run the `.sync()` method first for this to work
 
         Args:
             pattern: the regex pattern against which the section's name is matched
             return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
 
         Returns:
-            A Section instance containing the project details
+            A `Section` instance containing the section details, or a list of `Section` instances if `return_all` was set to `True`
 
-        IMPORTANT: You have to run the .sync() method first for this to work
+        Raises:
+            TodoistError: if `return_all=False` and no matching value is found
         """
         return self.sections.find(pattern=pattern, field='name', return_all=return_all)
 
@@ -319,6 +393,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Returns:
             A Section instance with all project details
+
+        Raises:
+            TodoistError: if `section_id` is not found
         """
         return self.sections.get(item_id=section_id)
 
@@ -338,7 +415,8 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     def add_task(self, task: Task) -> None:
         """Add new task to todoist.
 
-        This is a convenience method for TodoistAPI.add(item=task).
+        Note:
+            This is a convenience wrapper for `TodoistAPI.add(item=task)`.
 
         Args:
             task: a Task instance to add to Todoist
@@ -348,11 +426,16 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
     def close_task(self, task_id: int | str | None = None, *, task: Task | None = None) -> None:
         """Complete a task
 
+        Important:
+            Either the `task_id` or the `task` must be provided. The `task` object takes priority over the `task_id` argument if both are provided. `task` has
+            to be provided as a keyword argument.
+
         Args:
             task_id: the id of the task to close
             task: the Task object to close (keyword-only argument)
 
-        Either the task_id or the task must be provided. The task object takes priority over the task_id argument if both are provided
+        Raises:
+            TodoistError: if neither `task_id` nor `task` are provided.
         """
         if task:
             self.tasks.close(item=task)
@@ -377,17 +460,21 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         else:
             raise TodoistError('Either task or task_id has to be provided')
 
-    def find_task_by_pattern(self, pattern: str, return_all: bool = False) -> Task | list[Task]:
-        """Get a project if its name matches a regex pattern
+    def find_task(self, pattern: str, return_all: bool = False) -> Task | list[Task]:
+        """Find tasks based on a regex pattern.
+
+        Important:
+            You have to run the `.sync()` method first for this to work
 
         Args:
-            pattern: the regex pattern against which the project's name is matched
+            pattern: the regex pattern against which the task's content is matched
             return_all: returns only the first matching item if set to False (default), otherwise returns all matching items as a list
 
         Returns:
-            A Project instance containing the project details
+            A `Task` instance containing the task details, or a list of `Task` instances if `return_all` was set to `True`
 
-        IMPORTANT: You have to run the .sync() method first for this to work
+        Raises:
+            TodoistError: if `return_all=False` and no matching value is found
         """
         return self.tasks.find(pattern=pattern, field='content', return_all=return_all)
 
@@ -399,6 +486,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         Returns:
             A Task instance with all task details
+
+        Raises:
+            TodoistError: if `task_id` is not found
         """
         return self.tasks.get(item_id=task_id)
 
@@ -460,7 +550,6 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
 
 if __name__ == '__main__':  # pragma: no cover
-
     settings_ = Settings(_env_file='../.env')
     todoist_ = TodoistAPI(settings=settings_)
     todoist_.sync()

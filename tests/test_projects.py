@@ -19,7 +19,7 @@ def test_get_project_int_id(todoist, project_added):
 
 def test_get_project_by_pattern_unsynced(todoist):
     with pytest.raises(TodoistError):
-        result = todoist.find_project_by_pattern(pattern='Inbox')
+        result = todoist.find_project(pattern='Inbox')
         pass
 
 
@@ -29,7 +29,7 @@ def test_get_project_by_pattern_synced_existing(synced_todoist, project_inbox):
 
 def test_get_project_by_pattern_synced_non_existing(synced_todoist):
     with pytest.raises(TodoistError):
-        synced_todoist.find_project_by_pattern(pattern='NON_EXISTING_PROJECT')
+        synced_todoist.find_project(pattern='NON_EXISTING_PROJECT')
 
 
 def test_add_project(project_added):

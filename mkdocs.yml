@@ -29,6 +29,21 @@ extra:
         title: Cookie consent
         description: >-
             This site does not use any cookies whatsoever. No tracking, no personal data collection, only plain documentation.
+    social:
+        -   icon: fontawesome/brands/github
+            link: https://github.com/gaborschulz
+        -   icon: fontawesome/brands/linkedin
+            link: https://gabor.link/edin
+        -   icon: fontawesome/brands/mastodon
+            link: https://fosstodon.org/@gaborschulz
+    generator: false
 
 copyright: >
     Copyright &copy; 2022 Gabor Schulz – <a href="#__consent">Change cookie settings</a>
+
+repo_url: https://github.com/gaborschulz/synctodoist
+
+watch:
+    - mkdocs.yml
+    - docs
+    - synctodoist
