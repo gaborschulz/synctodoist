@@ -11,6 +11,7 @@ plugins:
                         show_source: false
                         heading_level: 3
                         filters: [ "!Config" ]
+                        merge_init_into_class: true
 nav:
     -   Welcome: index.md
     -   Tutorial: tutorials/index.md

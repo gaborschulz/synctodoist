@@ -130,7 +130,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.labels.find_by_pattern(pattern=pattern, field='name', return_all=return_all)
+        return self.labels.find(pattern=pattern, field='name', return_all=return_all)
 
     def get_label(self, label_id: int | str) -> Label | None:
         """Get label by id
@@ -141,7 +141,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A Label instance with all project details
         """
-        return self.labels.get_by_id(item_id=label_id)  # type: ignore
+        return self.labels.get(item_id=label_id)  # type: ignore
 
     def update_label(self, label_id: int | str | Label, label: Label):
         """
@@ -194,7 +194,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.projects.find_by_pattern(pattern=pattern, field='name', return_all=return_all)
+        return self.projects.find(pattern=pattern, field='name', return_all=return_all)
 
     def get_project(self, project_id: int | str) -> Project:
         """Get project by id
@@ -206,7 +206,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A Project instance with all project details
         """
-        return self.projects.get_by_id(item_id=project_id)
+        return self.projects.get(item_id=project_id)
 
     def update_project(self, project_id: int | str | Project, project: Project):
         """
@@ -256,7 +256,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A Reminder instance with all project details
         """
-        return self.reminders.get_by_id(item_id=reminder_id)  # type: ignore
+        return self.reminders.get(item_id=reminder_id)  # type: ignore
 
     def update_reminder(self, reminder_id: int | str | Reminder, reminder: Reminder):
         """
@@ -309,7 +309,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.sections.find_by_pattern(pattern=pattern, field='name', return_all=return_all)
+        return self.sections.find(pattern=pattern, field='name', return_all=return_all)
 
     def get_section(self, section_id: int | str) -> Section | None:
         """Get section by id
@@ -320,7 +320,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A Section instance with all project details
         """
-        return self.sections.get_by_id(item_id=section_id)
+        return self.sections.get(item_id=section_id)
 
     def update_section(self, section_id: int | str | Section, section: Section):
         """
@@ -389,7 +389,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
 
         IMPORTANT: You have to run the .sync() method first for this to work
         """
-        return self.tasks.find_by_pattern(pattern=pattern, field='content', return_all=return_all)
+        return self.tasks.find(pattern=pattern, field='content', return_all=return_all)
 
     def get_task(self, task_id: int | str) -> Task:
         """Get task by id
@@ -400,7 +400,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes
         Returns:
             A Task instance with all task details
         """
-        return self.tasks.get_by_id(item_id=task_id)
+        return self.tasks.get(item_id=task_id)
 
     def move_task(self, task: Task, parent: str | int | Task | None = None, section: str | int | Section | None = None,
                   project: str | int | Project | None = None) -> None:

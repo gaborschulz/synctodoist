@@ -1,7 +1,7 @@
 # Welcome to SyncTodoist
 
 SyncTodoist helps you interact with the Todoist Sync API v9 in Python. To find out more about the Todoist API, please, visit
-[developer.todoist.com](developer.todoist.com).
+[developer.todoist.com](https://developer.todoist.com).
 
 ## Design Principles
 

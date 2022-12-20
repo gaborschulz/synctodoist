@@ -10,7 +10,7 @@ class TaskManager(BaseManager[Task]):
     """Task manager"""
     model = Task
 
-    def get_by_id(self, item_id: int | str) -> Task:  # pylint: disable=arguments-renamed
+    def get(self, item_id: int | str) -> Task:  # pylint: disable=arguments-renamed
         """Get task by id
 
         Args:
@@ -19,7 +19,7 @@ class TaskManager(BaseManager[Task]):
         Returns:
             A Task instance with all task details
         """
-        if task := super().get_by_id(item_id=item_id):
+        if task := super().get(item_id=item_id):
             return task
 
         try:

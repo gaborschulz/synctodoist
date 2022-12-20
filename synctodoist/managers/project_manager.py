@@ -8,7 +8,7 @@ class ProjectManager(BaseManager[Project]):
     """Project manager model"""
     model = Project
 
-    def get_by_id(self, item_id: int | str) -> Project:  # pylint: disable=arguments-renamed
+    def get(self, item_id: int | str) -> Project:  # pylint: disable=arguments-renamed
         """Get project by id
 
         Args:
@@ -17,7 +17,7 @@ class ProjectManager(BaseManager[Project]):
         Returns:
             A Project instance with all project details
         """
-        if project := super().get_by_id(item_id=item_id):
+        if project := super().get(item_id=item_id):
             return project
 
         try:

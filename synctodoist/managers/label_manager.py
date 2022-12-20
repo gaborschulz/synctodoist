@@ -10,6 +10,6 @@ class LabelManager(BaseManager[Label]):
 
     Examples:
         >>> api = TodoistAPI()
-        >>> label = api.labels.get_by_id(item_id=123)
+        >>> label = api.labels.get(item_id=123)
     """
     model = Label
