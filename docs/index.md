@@ -30,5 +30,5 @@ This package is not created by, affiliated with, or supported by Doist.
 
 ## Privacy Policy
 
-This site does not collect any personal data about you. It do not use cookies, tracking or anything similar. The sole purpose of this site is to provide a
+This site does not collect any personal data about you. It does not use cookies, tracking or anything similar. The sole purpose of this site is to provide a
 documentation for the `synctodoist` package.
