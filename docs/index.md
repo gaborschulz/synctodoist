@@ -15,6 +15,15 @@ of the Sync API.
 4. **Properly documented**: this documentation follows the [Diátaxis](https://diataxis.fr) model.
 5. **Thoroughly tested**: every part of the code is tested thoroughly with unit tests and integration tests. Tests are created with `pytest`.
 
+## Bugs & Feature Requests
+
+If you find a bug, or you're missing a feature, please, open an issue on [GitHub](https://github.com/gaborschulz/synctodoist/issues). Please, use the 
+templates to describe the bug or feature request. This project is still work-in-progress, so new features will be added soon.
+
+## Contributing
+
+If you'd like to contribute, please, check the [Contributing Guide](https://github.com/gaborschulz/synctodoist/blob/main/CONTRIBUTING.md) in the GitHub repo.
+
 ## Disclaimer
 
 This package is not created by, affiliated with, or supported by Doist.

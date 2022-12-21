@@ -21,7 +21,7 @@ Getting started is quite simple:
 
 The documentation is available here: https://synctodoist.gaborschulz.com.
 
-## Legal info
+## Disclaimer
 
 This app is not created by, affiliated with, or supported by Doist.
 
