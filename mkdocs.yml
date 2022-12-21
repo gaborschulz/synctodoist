@@ -3,6 +3,7 @@ theme:
     name: material
     features:
         - navigation.sections
+        - content.code.annotate
 
 plugins:
     -   mkdocstrings:
@@ -17,16 +18,18 @@ plugins:
 nav:
     -   Welcome: index.md
     -   Tutorials:
-            -   Getting Started: tutorials/index.md
+            -   Prerequisites: tutorials/prereqs.md
+            -   Getting Started: tutorials/getting-started.md
     -   How-To Guides:
-            -   Settings & Configuration: how-tos/index.md
+            -   Settings & Configuration: how-tos/settings.md
+            -   Convenience Methods: how-tos/convenience-methods.md
     -   Reference:
             -   Overview: reference/index.md
             -   TodoistAPI: reference/todoist_api.md
             -   Managers: reference/managers.md
             -   Models: reference/models.md
             -   Exceptions: reference/exceptions.md
-    -   Explanations: explanation/index.md
+    -   Explanations: explanations/index.md
 
 extra:
     consent:
@@ -51,3 +54,8 @@ watch:
     - mkdocs.yml
     - docs
     - synctodoist
+
+markdown_extensions:
+    - admonition
+    - pymdownx.details
+    - pymdownx.superfences

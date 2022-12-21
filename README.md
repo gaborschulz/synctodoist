@@ -11,6 +11,20 @@
 
 A Python client for the Todoist Sync v9 API
 
+## Getting Started
+
+Getting started is quite simple:  
+
+`pip install synctodoist`
+
+## Documentation
+
+The documentation is available here: https://synctodoist.gaborschulz.com.
+
+## Legal info
+
+This app is not created by, affiliated with, or supported by Doist.
+
 ## License
 
 For licensing details, please, see [LICENSE.md](LICENSE.md)
