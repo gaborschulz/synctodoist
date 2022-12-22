@@ -20,6 +20,10 @@ of the Sync API.
 If you find a bug, or you're missing a feature, please, open an issue on [GitHub](https://github.com/gaborschulz/synctodoist/issues). Please, use the 
 templates to describe the bug or feature request. This project is still work-in-progress, so new features will be added soon.
 
+## Status
+
+The projecct is still in alpha stage. This means that it's probably not yet ready for production, but I'd be happy if you could test it and provide feedback.
+
 ## Contributing
 
 If you'd like to contribute, please, check the [Contributing Guide](https://github.com/gaborschulz/synctodoist/blob/main/CONTRIBUTING.md) in the GitHub repo.
