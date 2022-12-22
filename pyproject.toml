@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "synctodoist"
-version = "0.1.3"
+version = "0.1.4"
 description = "A Python client for the Todoist Sync v9 API"
 license = "MIT"
 authors = ["Gabor Schulz"]
