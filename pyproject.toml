@@ -16,7 +16,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11"
 ]  # https://pypi.org/classifiers/
@@ -26,7 +25,7 @@ packages = [{ include = "synctodoist" }]
 
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.10"
 httpx = "^0.23.1"
 pydantic = "^1.10.2"
 
@@ -45,10 +44,11 @@ mypy = "^0.991"
 pytest-pylint = "^0.19.0"
 pytest-mypy = "^0.10.1"
 python-dotenv = "^0.21.0"
+coverage-badge = "^1.1.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^8.5.10"
-mkdocstrings = {extras = ["python"], version = "^0.19.1"}
+mkdocstrings = { extras = ["python"], version = "^0.19.1" }
 
 [tool.isort]
 profile = "black"
