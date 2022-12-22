@@ -34,4 +34,4 @@ jobs:
             -   name: Run tests
                 env:
                     TODOIST_API_KEY: ${{ secrets.TODOIST_API_KEY }}
-                run: pytest
+                run: pytest -s
