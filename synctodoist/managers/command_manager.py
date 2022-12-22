@@ -122,6 +122,9 @@ def commit() -> Any:
 
 def write_sync_token():
     """Store the sync token"""
+    if not settings.cache_dir.exists():
+        settings.cache_dir.mkdir(parents=True, exist_ok=True)
+
     with (settings.cache_dir / 'todoist_sync_token.json').open('w', encoding='utf-8') as cache_fp:
         json.dump({'sync_token': SYNC_TOKEN}, cache_fp)
 

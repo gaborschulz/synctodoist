@@ -86,6 +86,9 @@ class BaseManager(Generic[TBaseModel]):
         self._items = {key: self.model(**value) for key, value in cache['data'].items()}
 
     def _write_cache(self):
+        if not self.settings.cache_dir.exists():
+            self.settings.cache_dir.mkdir(parents=True, exist_ok=True)
+
         cache_file = self.settings.cache_dir / f'todoist_{self.model.Config.cache_label}.json'
         cache = {
             'name': self.model.Config.cache_label,
