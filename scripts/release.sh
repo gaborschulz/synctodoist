@@ -52,7 +52,7 @@ release_to_pypi() {
 load_env &&
 cleanup &&
 run_test &&
-# bump_version $1 &&
+bump_version $1 &&
 push &&
 release_to_pypi
 
