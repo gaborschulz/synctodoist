@@ -38,6 +38,7 @@ bump_version() {
 }
 
 push() {
+    git push && \
     git push origin v$(poetry version --short)
 }
 
