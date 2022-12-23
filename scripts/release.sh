@@ -31,9 +31,9 @@ bump_version() {
 
     echo "Bumping version from $(poetry version)"
     poetry version $1 &&
-        poetry version &&
-        git commit -am "Committing version $(poetry version --short)" &&
-        git tag -a v$(poetry version --short) -m "Tagging version $(poetry version --short)"
+    poetry version &&
+    git commit -am "Committing version $(poetry version --short)" &&
+    git tag -a v$(poetry version --short) -m "Tagging version $(poetry version --short)"
     VERSION_BUMPED=1
 }
 
