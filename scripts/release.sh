@@ -37,7 +37,9 @@ bump_version() {
 }
 
 push() {
-    coverage-badge -o coverage.svg -f
+    coverage-badge -o coverage.svg -f && \
+    git add . && \
+    git commit --amend --no-edit && \
     git push origin v$(poetry version --short)
 }
 
@@ -47,6 +49,7 @@ release_to_pypi() {
     fi
 
     poetry publish --build
+    gh release create v$(poetry version --short) --generate-notes
 }
 
 load_env &&
