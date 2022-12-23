@@ -7,9 +7,9 @@ on:
             - reopened
         branches:
             - main
-    push:
-        tags:
-            - v*
+    #push:
+        #tags:
+            #- v*
     workflow_dispatch:
 
 jobs:
