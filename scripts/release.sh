@@ -13,8 +13,8 @@ load_env() {
 }
 
 run_test() {
-    pytest && \
-    coverage-badge -o coverage.svg -f && \
+    pytest --cov=. --cov-report xml -s && \
+    coverage-badge -o coverage.svg -f
 }
 
 cleanup() {
