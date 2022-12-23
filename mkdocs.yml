@@ -4,6 +4,7 @@ theme:
     features:
         - navigation.sections
         - content.code.annotate
+    font: false
 
 plugins:
     -   mkdocstrings:
@@ -60,3 +61,8 @@ markdown_extensions:
     - admonition
     - pymdownx.details
     - pymdownx.superfences
+
+extra_css:
+    - https://cdn.gaborschulz.com/fonts/roboto/font.css
+    - https://cdn.gaborschulz.com/fonts/roboto-mono/font.css
+    - stylesheets/extra.css
