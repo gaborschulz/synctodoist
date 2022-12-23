@@ -48,7 +48,9 @@ extra:
     generator: false
 
 copyright: >
-    Copyright &copy; 2022 Gabor Schulz – <a href="#__consent">Change cookie settings</a> | <a href="https://gaborschulz.com/imprint/index.html" target="_blank">Imprint</a>
+    Copyright &copy; 2022 Gabor Schulz – <a href="#__consent">Change cookie settings</a> | 
+    <a href="https://gaborschulz.com/imprint/index.html" target="_blank">Imprint</a> |
+    <a href="https://www.iubenda.com/privacy-policy/8008630" target="_blank">Privacy Policy</a>
 
 repo_url: https://github.com/gaborschulz/synctodoist
 
