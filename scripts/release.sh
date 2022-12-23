@@ -13,7 +13,8 @@ load_env() {
 }
 
 run_test() {
-    pytest
+    pytest && \
+    coverage-badge -o coverage.svg -f && \
 }
 
 cleanup() {
@@ -37,9 +38,6 @@ bump_version() {
 }
 
 push() {
-    coverage-badge -o coverage.svg -f && \
-    git add . && \
-    git commit --amend --no-edit && \
     git push origin v$(poetry version --short)
 }
 
