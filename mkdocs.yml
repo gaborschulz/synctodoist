@@ -35,7 +35,8 @@ extra:
     consent:
         title: Cookie consent
         description: >-
-            This site does not use any cookies whatsoever. No tracking, no personal data collection, only plain documentation.
+            We don't use any cookies at all. We don't track you, we don't analyze your behavior. We just want to make sure
+            that the information we give you here is useful. That's all.
     social:
         -   icon: fontawesome/brands/github
             link: https://github.com/gaborschulz
