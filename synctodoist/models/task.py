@@ -26,6 +26,7 @@ class Task(TodoistBaseModel):
     checked: bool | None
     sync_id: str | int | None
     added_at: datetime | None
+    auto_reminder: bool = False
 
     class Config:
         """Config for Task model"""
