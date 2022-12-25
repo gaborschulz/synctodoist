@@ -17,12 +17,6 @@ def test_get_project_int_id(todoist, project_added):
     assert project.name == project_added.name
 
 
-def test_get_project_by_pattern_unsynced(todoist):
-    with pytest.raises(TodoistError):
-        result = todoist.find_project(pattern='Inbox')
-        pass
-
-
 def test_get_project_by_pattern_synced_existing(synced_todoist, project_inbox):
     assert project_inbox.name == 'Inbox'
 

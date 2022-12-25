@@ -18,10 +18,19 @@ TBaseModel = TypeVar('TBaseModel', bound=TodoistBaseModel)  # pylint: disable=in
 class BaseManager(Generic[TBaseModel]):
     """Base manager"""
     _items: dict[str, TBaseModel]
+    _instances: dict[Type[TBaseModel], Any] = {}
     model: Type[TBaseModel]
 
+    def __new__(cls, model: Type[TBaseModel], *args, **kwargs):  # pylint: disable=unused-argument
+        if model not in cls._instances:
+            cls._instances[model] = super().__new__(cls)
+
+        return cls._instances.get(model)
+
     def __init__(self, settings: Settings):
-        self._items = {}
+        if not hasattr(self, '_items'):
+            self._items = {}
+
         self.settings = settings
 
     # region Pass-through to dict

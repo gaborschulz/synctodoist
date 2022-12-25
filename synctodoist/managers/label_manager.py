@@ -13,3 +13,6 @@ class LabelManager(BaseManager[Label]):
         >>> label = api.labels.get(item_id=123)
     """
     model = Label
+
+    def __new__(cls, *args, **kwargs):
+        return super().__new__(cls, *args, model=Label, **kwargs)

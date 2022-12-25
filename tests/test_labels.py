@@ -20,11 +20,6 @@ def test_get_label_by_pattern(synced_todoist, label_added):
     assert 'fixture_label_added' in label.name
 
 
-def test_get_label_unsynced(todoist, label_added):
-    with pytest.raises(TodoistError):
-        todoist.get_label(label_id=label_added.id)
-
-
 def test_delete_label_by_model(synced_todoist, label_added):
     synced_todoist.delete_label(label=label_added)
     synced_todoist.commit()

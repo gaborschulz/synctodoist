@@ -8,6 +8,9 @@ class ProjectManager(BaseManager[Project]):
     """Project manager model"""
     model = Project
 
+    def __new__(cls, *args, **kwargs):
+        return super().__new__(cls, *args, model=Project, **kwargs)
+
     def get(self, item_id: int | str) -> Project:  # pylint: disable=arguments-renamed
         """Get project by id
 

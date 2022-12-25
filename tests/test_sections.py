@@ -21,11 +21,6 @@ def test_get_section_by_pattern(synced_todoist, section_added):
     assert section.name == section_added.name
 
 
-def test_get_section_unsynced(todoist, section_added):
-    with pytest.raises(TodoistError):
-        todoist.get_section(section_id=section_added.id)
-
-
 def test_delete_section_by_model(synced_todoist, section_added):
     synced_todoist.delete_section(section=section_added)
     synced_todoist.commit()

@@ -10,6 +10,9 @@ class TaskManager(BaseManager[Task]):
     """Task manager"""
     model = Task
 
+    def __new__(cls, *args, **kwargs):
+        return super().__new__(cls, *args, model=Task, **kwargs)
+
     def get(self, item_id: int | str) -> Task:  # pylint: disable=arguments-renamed
         """Get task by id
 
