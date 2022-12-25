@@ -22,7 +22,7 @@ The `TodoistAPI` class is the tool you use to send requests to the Todoist API.
     The API object needs to be synchronized with the Todoist API. To do so, you simply have to call `api.sync() .
 
 ???+ Note
-    There are other ways to provide the API key that are more secure. To find out more, visit [Settings & Configuration](how-tos/settings.md).
+    There are other ways to provide the API key that are more secure. To find out more, visit [Settings & Configuration](../how-tos/settings.md).
 
 ## Getting a project by id
 
