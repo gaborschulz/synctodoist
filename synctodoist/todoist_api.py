@@ -596,5 +596,4 @@ if __name__ == '__main__':  # pragma: no cover
     settings_ = Settings(_env_file='../.env')
     todoist_ = TodoistAPI(settings=settings_)
     todoist_.sync()
-    task_manager = TaskManager(settings=todoist_.settings)
     print(todoist_)

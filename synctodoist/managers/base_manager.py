@@ -20,18 +20,22 @@ class BaseManager(Generic[TBaseModel]):
     _items: dict[str, TBaseModel]
     _instances: dict[Type[TBaseModel], Any] = {}
     model: Type[TBaseModel]
+    settings: Settings
 
-    def __new__(cls, model: Type[TBaseModel], *args, **kwargs):  # pylint: disable=unused-argument
+    def __new__(cls, model: Type[TBaseModel], settings: Settings | None = None, **kwargs):  # pylint: disable=unused-argument
         if model not in cls._instances:
             cls._instances[model] = super().__new__(cls)
+            cls._instances[model].settings = settings
+            cls._instances[model].model = model
 
         return cls._instances.get(model)
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings | None = None):
         if not hasattr(self, '_items'):
             self._items = {}
 
-        self.settings = settings
+        if not hasattr(self, 'settings') and settings:
+            self.settings = settings
 
     # region Pass-through to dict
     def _dict_get(self, __key: str, default: Any) -> TBaseModel | None:
