@@ -1,6 +1,7 @@
 # pylint: disable=invalid-name
 import json
 import uuid
+from datetime import datetime, date, time, timedelta
 from typing import Any
 
 import httpx
@@ -20,6 +21,19 @@ SYNC_TOKEN: str = '*'
 settings: Settings = Settings()
 full_sync_count = 0
 partial_sync_count = 0
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    """Custom JSON encoder for date-like objects"""
+
+    def default(self, o):
+        if isinstance(o, (datetime, date, time)):
+            return o.isoformat()
+
+        if isinstance(o, timedelta):
+            return (datetime.min + o).time().isoformat()
+
+        return super().default(o)
 
 
 def add_command(data: Any, command_type: str, item: TodoistBaseModel | None = None, is_update_command: bool = False) -> None:
@@ -45,9 +59,10 @@ def add_command(data: Any, command_type: str, item: TodoistBaseModel | None = No
 
 
 def _build_request_data(data: Any) -> dict:
+    encoder = DateTimeEncoder()
     result = {
         'sync_token': SYNC_TOKEN,
-        **{key: json.dumps(value) for key, value in data.items()}
+        **{key: encoder.encode(value) for key, value in data.items()}
     }
 
     return result
