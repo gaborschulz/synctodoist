@@ -30,10 +30,21 @@ bump_version() {
     fi
 
     echo "Bumping version from $(poetry version)"
-    poetry version $1 &&
-    poetry version &&
-    git commit -am "Committing version $(poetry version --short)" &&
-    git tag -a v$(poetry version --short) -m "Tagging version $(poetry version --short)"
+    poetry version $1 && \
+    poetry version && \
+
+    COMMIT_MESSAGE="Committing version $(poetry version --short)" && \
+    echo -ne "${QUESTION_FLAG} ${CYAN}Enter a custom commit/release message [${WHITE}$COMMIT_MESSAGE${CYAN}]: "
+    read INPUT_STRING
+    if [ "$INPUT_STRING" = "" ]; then
+        INPUT_STRING=$COMMIT_MESSAGE
+    fi
+
+    git commit -am "$INPUT_STRING" && \
+    git tag -a v$(poetry version --short) -m "$INPUT_STRING" && \
+
+    git push && \
+    git push origin v$(poetry version --short) && \
     VERSION_BUMPED=1
 }
 
