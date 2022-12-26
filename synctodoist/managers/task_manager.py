@@ -38,6 +38,9 @@ class TaskManager(BaseManager[Task]):
         except Exception as ex:
             raise TodoistError(f'Task {item_id} not found') from ex
 
+    def find(self, pattern: str, field: str = 'content', return_all: bool = False) -> Task | list[Task]:
+        return super().find(pattern=pattern, field=field, return_all=return_all)
+
     def close(self, item: int | str | Task) -> None:
         """Complete a task
 
