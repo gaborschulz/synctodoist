@@ -61,6 +61,7 @@ exclude_dirs = ["data", "docs", "tests", "migrations"]
 [tool.pytest.ini_options]
 python_files = "tests.py test_*.py"
 addopts = "--pylint --mypy"
+filterwarnings = "ignore::DeprecationWarning"
 
 [tool.mypy]
 exclude = [
