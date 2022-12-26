@@ -1,4 +1,4 @@
-site_name: SyncTodoist Docs
+site_name: SyncTodoist Documentation
 theme:
     name: material
     features:
