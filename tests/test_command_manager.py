@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from synctodoist.exceptions import TodoistError
 from synctodoist.managers import command_manager
 
-load_dotenv()
+load_dotenv('../.env')
 API_KEY = os.environ.get('TODOIST_API')
 
 
