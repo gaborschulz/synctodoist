@@ -7,7 +7,7 @@ authors = ["Gabor Schulz"]
 readme = "README.md"
 homepage = "https://github.com/gaborschulz/synctodoist"
 repository = "https://github.com/gaborschulz/synctodoist"
-documentation = ""
+documentation = "https://github.com/gaborschulz/synctodoist"
 keywords = []
 classifiers = [
     "Development Status :: 3 - Alpha",
