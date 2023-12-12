@@ -77,7 +77,7 @@ release_to_pypi() {
 
 load_env &&
 cleanup &&
-# run_test &&
+run_test &&
 bump_version $1 &&
 push &&
 release_to_pypi
