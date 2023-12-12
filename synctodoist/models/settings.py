@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     """Settings model"""
     api_key: str = ''
     cache_dir: Path = Field(default_factory=cache_dir_factory)
+    timeout: float | None = None
 
     class Config:
         """Settings configuration"""

@@ -122,7 +122,10 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
         self._read_all_caches()
 
         data = {'resource_types': RESOURCE_TYPES}
-        result = command_manager.post(data, 'sync')
+        arguments = {}
+        if self.settings.timeout:
+            arguments['timeout'] = self.settings.timeout
+        result = command_manager.post(data, 'sync', **arguments)
 
         for key in CACHE_MAPPING:
             target = getattr(self, key)

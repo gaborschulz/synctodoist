@@ -5,6 +5,8 @@ from datetime import datetime, date, time, timedelta
 from typing import Any
 
 import httpx
+from httpx._config import DEFAULT_TIMEOUT_CONFIG
+from httpx._types import TimeoutTypes
 
 from synctodoist.exceptions import TodoistError
 from synctodoist.models import Command, TodoistBaseModel, Settings
@@ -68,7 +70,7 @@ def _build_request_data(data: Any) -> dict:
     return result
 
 
-def post(data: dict, endpoint: str) -> Any:
+def post(data: dict, endpoint: str, timeout: TimeoutTypes = DEFAULT_TIMEOUT_CONFIG) -> Any:
     """Post data to Todoist"""
     global SYNC_TOKEN  # pylint: disable=global-statement
 
@@ -76,7 +78,7 @@ def post(data: dict, endpoint: str) -> Any:
     _headers.update({'Authorization': f'Bearer {settings.api_key}'})
 
     dataset = _build_request_data(data=data)
-    response = httpx.post(url=url, data=dataset, headers=_headers)
+    response = httpx.post(url=url, data=dataset, headers=_headers, timeout=timeout)
     response.raise_for_status()
     result = response.json()
 
@@ -85,12 +87,12 @@ def post(data: dict, endpoint: str) -> Any:
     return result
 
 
-def get(endpoint: str) -> Any:
+def get(endpoint: str, timeout: TimeoutTypes = DEFAULT_TIMEOUT_CONFIG) -> Any:
     """Get data from Todoist"""
     url = f'{BASE_URL}/{endpoint}'
     _headers.update({'Authorization': f'Bearer {settings.api_key}'})
     with httpx.Client(headers=_headers) as client:
-        response = client.get(url=url)
+        response = client.get(url=url, timeout=timeout)
         response.raise_for_status()
         return response.json()  # type: ignore
 
