@@ -4,8 +4,8 @@ from synctodoist.exceptions import TodoistError
 from synctodoist.managers import ProjectManager, command_manager, TaskManager, LabelManager, SectionManager, ReminderManager
 from synctodoist.models import Task, Project, Label, Section, TodoistBaseModel, Reminder, Settings
 
-CACHE_MAPPING = {x.Config.cache_label: x for x in TodoistBaseModel.__subclasses__()}
-RESOURCE_TYPES = [x.Config.todoist_resource_type for x in TodoistBaseModel.__subclasses__()]
+CACHE_MAPPING = {x.TodoistConfig.cache_label: x for x in TodoistBaseModel.__subclasses__()}
+RESOURCE_TYPES = [x.TodoistConfig.todoist_resource_type for x in TodoistBaseModel.__subclasses__()]
 
 
 class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-docstring,line-too-long
@@ -76,7 +76,7 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
         """
         # type: ignore
         model = type(item)
-        key = model.Config.cache_label
+        key = model.TodoistConfig.cache_label
         model_manager = getattr(self, key)
         model_manager.add(item=item)
 
@@ -131,9 +131,9 @@ class TodoistAPI:  # pylint: disable=too-many-instance-attributes,missing-class-
             target = getattr(self, key)
             model = CACHE_MAPPING[key]
             # Add new items
-            target._dict_update({x['id']: model(**x) for x in result[model.Config.todoist_resource_type]})  # pylint: disable=protected-access
+            target._dict_update({x['id']: model(**x) for x in result[model.TodoistConfig.todoist_resource_type]})  # pylint: disable=protected-access
             # Remove deleted items
-            target._remove_deleted(result[model.Config.todoist_resource_type], result['full_sync'])  # pylint: disable=protected-access
+            target._remove_deleted(result[model.TodoistConfig.todoist_resource_type], result['full_sync'])  # pylint: disable=protected-access
 
         self._write_all_caches()
         command_manager.write_sync_token()

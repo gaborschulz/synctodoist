@@ -1,3 +1,5 @@
+from pydantic import ConfigDict
+
 from .enums import ColorEnum
 from .todoist_base_model import TodoistBaseModel
 
@@ -5,11 +7,12 @@ from .todoist_base_model import TodoistBaseModel
 class Label(TodoistBaseModel):
     """Label model"""
     name: str
-    color: ColorEnum | None
-    item_order: int | None
+    color: ColorEnum | None = None
+    item_order: int | None = None
     is_favorite: bool = False
+    model_config = ConfigDict()
 
-    class Config:
+    class TodoistConfig:
         """Config for Label model"""
         cache_label: str = 'labels'
         todoist_name: str = 'label'

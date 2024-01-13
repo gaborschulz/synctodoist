@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import typing
 
+from pydantic import ConfigDict
+
 from .enums import ColorEnum
 from .todoist_base_model import TodoistBaseModel
 
@@ -33,19 +35,20 @@ class Project(TodoistBaseModel):
         This class inherits all the properties of [`TodoistBaseModel`](models.md#todoistbasemodel)
     """
     name: str
-    color: ColorEnum | None
-    parent_id: str | int | None
-    child_order: int | None
+    color: ColorEnum | None = None
+    parent_id: str | int | None = None
+    child_order: int | None = None
     collapsed: bool = False
     shared: bool = False
-    sync_id: str | int | None
+    sync_id: str | int | None = None
     is_archived: bool = False
     is_favorite: bool = False
-    view_style: str | None
+    view_style: str | None = None
     inbox_project: bool = False
     team_inbox: bool = False
+    model_config = ConfigDict()
 
-    class Config:
+    class TodoistConfig:
         """Config for Project model"""
         cache_label: str = 'projects'
         todoist_name: str = 'project'

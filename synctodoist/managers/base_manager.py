@@ -89,7 +89,7 @@ class BaseManager(Generic[TBaseModel]):
         self._items = result
 
     def _read_cache(self):
-        cache_file = self.settings.cache_dir / f'todoist_{self.model.Config.cache_label}.json'
+        cache_file = self.settings.cache_dir / f'todoist_{self.model.TodoistConfig.cache_label}.json'
         if not cache_file.exists():
             return
 
@@ -102,9 +102,9 @@ class BaseManager(Generic[TBaseModel]):
         if not self.settings.cache_dir.exists():
             self.settings.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        cache_file = self.settings.cache_dir / f'todoist_{self.model.Config.cache_label}.json'
+        cache_file = self.settings.cache_dir / f'todoist_{self.model.TodoistConfig.cache_label}.json'
         cache = {
-            'name': self.model.Config.cache_label,
+            'name': self.model.TodoistConfig.cache_label,
             'data': {key: value.dict(exclude_none=True) for key, value in self._items.items()}
         }
 
@@ -126,7 +126,7 @@ class BaseManager(Generic[TBaseModel]):
         if item := self._dict_get(str(item_id), None):
             return item
 
-        if not hasattr(self.model.Config, 'api_get'):
+        if not hasattr(self.model.TodoistConfig, 'api_get'):
             raise TodoistError(f'{self.model} does not support the get method without syncing. Please, sync your API first.')
 
         return None
@@ -160,7 +160,7 @@ class BaseManager(Generic[TBaseModel]):
 
     def add(self, item: TBaseModel):
         """Add new item to command_manager queue"""
-        command_manager.add_command(data=item.dict(exclude_none=True, exclude_defaults=True), command_type=self.model.Config.command_add, item=item)
+        command_manager.add_command(data=item.dict(exclude_none=True, exclude_defaults=True), command_type=self.model.TodoistConfig.command_add, item=item)
 
     def delete(self, item: int | str | TBaseModel) -> None:
         """Delete an item
@@ -173,7 +173,7 @@ class BaseManager(Generic[TBaseModel]):
 
         _, item_id = self._extract_params(item)
 
-        command_manager.add_command(data={'id': item_id}, command_type=self.model.Config.command_delete)
+        command_manager.add_command(data={'id': item_id}, command_type=self.model.TodoistConfig.command_delete)
 
     def update(self, item: int | str | TBaseModel, updated_item: TBaseModel):
         """
@@ -186,6 +186,6 @@ class BaseManager(Generic[TBaseModel]):
         params, item_id = self._extract_params(item)
 
         command_manager.add_command(data={'id': item_id, **updated_item.dict(exclude={'id'}, exclude_none=True, exclude_defaults=True)},
-                                    command_type=self.model.Config.command_update, **params)  # type: ignore
+                                    command_type=self.model.TodoistConfig.command_update, **params)  # type: ignore
 
     # endregion

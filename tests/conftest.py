@@ -11,14 +11,14 @@ from synctodoist.models import Task, Due, Project, Label, Section, Reminder, Rem
 
 @pytest.fixture()
 def todoist():
-    settings = Settings(_env_file='../.env', timeout=30)
+    settings = Settings(_env_file='.env', timeout=30)
     todoist = TodoistAPI(settings=settings)
     return todoist
 
 
 @pytest.fixture(scope='session')
 def synced_todoist():
-    settings = Settings(_env_file='../.env', timeout=30)
+    settings = Settings(_env_file='.env', timeout=30)
     todoist = TodoistAPI(settings=settings)
     todoist.sync()
     return todoist
