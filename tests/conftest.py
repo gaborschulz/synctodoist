@@ -43,14 +43,6 @@ def task_added(synced_todoist, project_inbox):
         print(ex)
 
 
-@pytest.fixture
-def task_added_no_teardown(synced_todoist, project_inbox):
-    task = Task(content=f'fixture_task_added ({datetime.now().isoformat()})', project_id=project_inbox.id, due=Due(string='today 18:00'))
-    synced_todoist.add_task(task)
-    synced_todoist.commit()
-    yield task
-
-
 task_added_second = task_added
 
 
@@ -80,16 +72,11 @@ def section_added(synced_todoist, project_added):
     synced_todoist.add_section(section)
     synced_todoist.commit()
     yield section
-    synced_todoist.delete_section(section=section)
-    synced_todoist.commit()
-
-
-@pytest.fixture
-def section_added_no_teardown(synced_todoist, project_added):
-    section = Section(name=f'fixture_section_added_{int(datetime.now().timestamp())}_{randint(0, 10000)}', project_id=project_added.id)
-    synced_todoist.add_section(section)
-    synced_todoist.commit()
-    yield section
+    try:
+        synced_todoist.delete_section(section=section)
+        synced_todoist.commit()
+    except TodoistError as ex:
+        print(ex)
 
 
 @pytest.fixture
