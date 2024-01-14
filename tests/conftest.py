@@ -5,6 +5,7 @@ from random import randint
 import pytest
 
 from synctodoist import TodoistAPI
+from synctodoist.exceptions import TodoistError
 from synctodoist.managers import command_manager
 from synctodoist.models import Task, Due, Project, Label, Section, Reminder, ReminderTypeEnum, Settings
 
@@ -35,8 +36,11 @@ def task_added(synced_todoist, project_inbox):
     synced_todoist.add_task(task)
     synced_todoist.commit()
     yield task
-    synced_todoist.delete_task(task=task)
-    synced_todoist.commit()
+    try:
+        synced_todoist.delete_task(task=task)
+        synced_todoist.commit()
+    except TodoistError as ex:
+        print(ex)
 
 
 @pytest.fixture
