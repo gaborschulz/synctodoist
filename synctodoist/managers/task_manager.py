@@ -26,7 +26,7 @@ class TaskManager(BaseManager[Task]):
             return task
 
         try:
-            endpoint = self.model.Config.api_get
+            endpoint = self.model.TodoistConfig.api_get
             if isinstance(item_id, str) and item_id.isdigit():
                 item_id = int(item_id)
 
@@ -49,7 +49,7 @@ class TaskManager(BaseManager[Task]):
         """
         params, task_id = self._extract_params(item)
 
-        command_manager.add_command(data={'id': task_id}, command_type=self.model.Config.command_close, **params)
+        command_manager.add_command(data={'id': task_id}, command_type=self.model.TodoistConfig.command_close, **params)
 
     def reopen(self, item: int | str | Task) -> None:
         """Reopen a task
@@ -63,7 +63,7 @@ class TaskManager(BaseManager[Task]):
 
         params, task_id = self._extract_params(item)
 
-        command_manager.add_command(data={'id': task_id}, command_type=self.model.Config.command_reopen, **params)
+        command_manager.add_command(data={'id': task_id}, command_type=self.model.TodoistConfig.command_reopen, **params)
 
     def move(self, item: str | int | Task, parent: str | int | Task | None = None, section: str | int | Section | None = None,
              project: str | int | Project | None = None):
@@ -110,4 +110,4 @@ class TaskManager(BaseManager[Task]):
             case str():
                 data['project_id'] = project
 
-        command_manager.add_command(data=data, command_type=self.model.Config.command_move, **params)
+        command_manager.add_command(data=data, command_type=self.model.TodoistConfig.command_move, **params)

@@ -24,7 +24,7 @@ class ProjectManager(BaseManager[Project]):
             return project
 
         try:
-            endpoint = self.model.Config.api_get
+            endpoint = self.model.TodoistConfig.api_get
             if isinstance(item_id, str) and item_id.isdigit():
                 item_id = int(item_id)
 

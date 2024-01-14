@@ -36,9 +36,7 @@ class TodoistBaseModel(BaseModel):
         Args:
             **data: keyword arguments with the field to update
         """
-        try:
-            new_model = self.__class__(**data)
-            for field in new_model.model_fields_set:
-                setattr(self, field, getattr(new_model, field))
-        except Exception as ex:
-            raise
+
+        new_model = self.__class__(**data)
+        for field in list(new_model.model_fields_set):
+            setattr(self, field, getattr(new_model, field))
