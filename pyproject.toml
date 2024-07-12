@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "synctodoist"
-version = "0.3.3"
+version = "0.3.4"
 description = "A Python wrapper for the Todoist Sync API v9"
 license = "MIT"
 authors = ["Gabor Schulz"]
