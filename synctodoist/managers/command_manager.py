@@ -5,7 +5,6 @@ from datetime import datetime, date, time, timedelta
 from typing import Any
 
 import httpx
-from httpx._config import DEFAULT_TIMEOUT_CONFIG
 from httpx._types import TimeoutTypes
 
 from synctodoist.exceptions import TodoistError
@@ -23,6 +22,8 @@ SYNC_TOKEN: str = '*'
 settings: Settings = Settings()
 full_sync_count = 0
 partial_sync_count = 0
+
+TIMEOUT = 30
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -70,7 +71,7 @@ def _build_request_data(data: Any) -> dict:
     return result
 
 
-def post(data: dict, endpoint: str, timeout: TimeoutTypes = DEFAULT_TIMEOUT_CONFIG) -> Any:
+def post(data: dict, endpoint: str, timeout: TimeoutTypes = TIMEOUT) -> Any:
     """Post data to Todoist"""
     global SYNC_TOKEN  # pylint: disable=global-statement
 
@@ -87,7 +88,7 @@ def post(data: dict, endpoint: str, timeout: TimeoutTypes = DEFAULT_TIMEOUT_CONF
     return result
 
 
-def get(endpoint: str, timeout: TimeoutTypes = DEFAULT_TIMEOUT_CONFIG) -> Any:
+def get(endpoint: str, timeout: TimeoutTypes = TIMEOUT) -> Any:
     """Get data from Todoist"""
     url = f'{BASE_URL}/{endpoint}'
     _headers.update({'Authorization': f'Bearer {settings.api_key}'})
@@ -110,7 +111,7 @@ def commit() -> Any:
 
     endpoint = 'sync'
     data = {'commands': [command.dict(exclude_none=True, exclude_defaults=True) for command in commands.values()]}
-    result = post(data, endpoint)
+    result = post(data=data, endpoint=endpoint)
 
     if result.get('full_sync', False):
         full_sync_count += 1
@@ -139,8 +140,8 @@ def commit() -> Any:
 
 def write_sync_token():
     """Store the sync token"""
-    if not settings.cache_dir.exists():
-        settings.cache_dir.mkdir(parents=True, exist_ok=True)
+    if not settings.cache_dir.exists():  # pylint: disable=no-member
+        settings.cache_dir.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
 
     with (settings.cache_dir / 'todoist_sync_token.json').open('w', encoding='utf-8') as cache_fp:
         json.dump({'sync_token': SYNC_TOKEN}, cache_fp)
