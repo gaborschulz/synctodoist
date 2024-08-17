@@ -24,6 +24,7 @@ class LabelManager(BaseManager[Label]):
         return super().__new__(cls, *args, model=Label, **kwargs)
 
     def _remove_deleted(self, received: list[Any], full_sync: bool = False):
+        """Remove deleted labels"""
         received_keys = {x['id'] for x in received}
         result: dict[str, TBaseModel] = {}
 
