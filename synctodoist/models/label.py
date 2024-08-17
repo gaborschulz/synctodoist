@@ -7,9 +7,10 @@ from .todoist_base_model import TodoistBaseModel
 class Label(TodoistBaseModel):
     """Label model"""
     name: str
-    color: ColorEnum | None = None
+    color: ColorEnum | int | None = None
     item_order: int | None = None
     is_favorite: bool = False
+    is_deleted: bool = False
     model_config = ConfigDict()
 
     class TodoistConfig:
