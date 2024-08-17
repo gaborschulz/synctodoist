@@ -10,7 +10,6 @@ class Label(TodoistBaseModel):
     color: ColorEnum | int | None = None
     item_order: int | None = None
     is_favorite: bool = False
-    is_deleted: bool = False
     model_config = ConfigDict()
 
     class TodoistConfig:
