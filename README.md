@@ -11,6 +11,10 @@
 
 ## Summary
 
+⚠️ ⚠️ ⚠️ **WARNING: Deprecation notice**  ⚠️ ⚠️ ⚠️  
+This package has been deprecated on 2024-08-18 and is not maintained any more. 
+If you are using the Todoist API from Python, I recommend moving to the official `todoist-api-python` package.  
+
 A Python client for the Todoist Sync v9 API
 
 ## Getting Started

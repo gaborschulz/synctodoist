@@ -1,5 +1,11 @@
 # Welcome to SyncTodoist
 
+⚠️ ⚠️ ⚠️ **WARNING: Deprecation notice**  ⚠️ ⚠️ ⚠️  
+This package has been deprecated on 2024-08-18 and is not maintained any more. 
+If you are using the Todoist API from Python, I recommend moving to the official `todoist-api-python` package.  
+
+
+
 SyncTodoist helps you interact with the Todoist Sync API v9 in Python. To find out more about the Todoist API, please, visit
 [developer.todoist.com](https://developer.todoist.com).
 
